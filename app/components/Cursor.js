@@ -31,7 +31,7 @@ export default function Cursor() {
       }}/>
       <div ref={ringRef} style={{
         position: 'fixed', width: 40, height: 40,
-        border: '1px solid rgba(240,235,227,.4)', borderRadius: '50%',
+        border: '1px solid var(--border-strong)', borderRadius: '50%',
         pointerEvents: 'none', zIndex: 9998,
         transform: 'translate(-50%,-50%)',
         transition: 'width .3s, height .3s'

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { urlFor } from '@/sanity/lib/image'
 import Lightbox from './Lightbox'
 
-export default function GalleryPage({ photos }) {
+export default function GalleryPage({ photos, heroImage }) {
   const containerRef  = useRef(null)
   const heroTitleRef  = useRef(null)
   const heroEyeRef    = useRef(null)
@@ -246,9 +246,11 @@ export default function GalleryPage({ photos }) {
         <div className="g-hero-bg" style={{
           position: 'absolute', top: '-15%', left: '-5%',
           width: '110%', height: '130%',
-          backgroundImage: all[0]
+          backgroundImage: heroImage
+            ? `url(${urlFor(heroImage).width(1800).quality(85).url()})`
+            : all[0]
             ? `url(${urlFor(all[0].image).width(1800).quality(85).url()})`
-            : 'linear-gradient(135deg,#1a1a16,#0a0a08)',
+            : 'linear-gradient(135deg, var(--mid), var(--dark))',
           backgroundSize: 'cover', backgroundPosition: 'center'
         }}/>
         {/* overlay */}
@@ -305,7 +307,7 @@ export default function GalleryPage({ photos }) {
       <div style={{
         padding: '5rem 4rem 3rem',
         display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', borderBottom: '1px solid rgba(240,235,227,.08)'
+        justifyContent: 'space-between', borderBottom: '1px solid var(--border)'
       }}>
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: '.7rem',
@@ -335,7 +337,7 @@ export default function GalleryPage({ photos }) {
                 padding: '.8rem 2rem', cursor: 'none',
                 background: activeFilter === f.id ? 'var(--accent)' : 'transparent',
                 color: activeFilter === f.id ? 'var(--dark)' : 'var(--muted)',
-                border: `1px solid ${activeFilter === f.id ? 'var(--accent)' : 'rgba(240,235,227,.2)'}`,
+                border: `1px solid ${activeFilter === f.id ? 'var(--accent)' : 'var(--border)'}`,
                 transition: 'background .3s, color .3s, border-color .3s',
               }}
             >{f.label}</button>
@@ -354,7 +356,7 @@ export default function GalleryPage({ photos }) {
               fontFamily: 'var(--font-mono)', fontSize: '.7rem',
               letterSpacing: '.3em', textTransform: 'uppercase', color: 'var(--accent)'
             }}>01 — Street Series / Phnom Penh</span>
-            <div style={{ flex: 1, height: 1, background: 'rgba(240,235,227,.1)' }}/>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
             <span style={{
               fontFamily: 'var(--font-mono)', fontSize: '.65rem',
               color: 'var(--muted)', letterSpacing: '.1em'
@@ -418,7 +420,7 @@ export default function GalleryPage({ photos }) {
                     {photo.writeup && hoveredCard === photo._id && (
                       <div style={{
                         fontFamily: 'var(--font-mono)', fontSize: '.72rem',
-                        lineHeight: 1.7, color: 'rgba(240,235,227,.65)',
+                        lineHeight: 1.7, color: 'var(--text-muted)',
                         maxWidth: '32rem',
                         opacity: hoveredCard === photo._id ? 1 : 0,
                         transition: 'opacity .3s .1s'
@@ -430,7 +432,7 @@ export default function GalleryPage({ photos }) {
                   <div style={{
                     position: 'absolute', top: '2rem', right: '2rem',
                     fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                    letterSpacing: '.15em', color: 'rgba(240,235,227,.4)'
+                    letterSpacing: '.15em', color: 'var(--text-muted-strong)'
                   }}>{fmt(i + 1)}</div>
                 </div>
               ))}
@@ -516,7 +518,7 @@ export default function GalleryPage({ photos }) {
                     {photo.writeup && (
                       <div style={{
                         fontFamily: 'var(--font-mono)', fontSize: '.72rem',
-                        lineHeight: 1.6, color: 'rgba(240,235,227,.6)',
+                        lineHeight: 1.6, color: 'var(--text-muted)',
                         marginTop: '.8rem'
                       }}>{photo.writeup}</div>
                     )}
@@ -536,19 +538,19 @@ export default function GalleryPage({ photos }) {
             alignItems: 'end'
           }}>
             <h2 className="masonry-title-text" style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontSize: 'clamp(3.5rem,6vw,5.5rem)',
               fontWeight: 300, lineHeight: .9, letterSpacing: '-.02em'
             }}>Landscape</h2>
             <div>
               <div className="section-label" style={{
-                fontFamily: "'Courier New', monospace", fontSize: '.7rem',
+                fontFamily: 'var(--font-mono)', fontSize: '.7rem',
                 letterSpacing: '.25em', textTransform: 'uppercase',
-                color: '#c8a96e', marginBottom: '1.5rem'
+                color: 'var(--accent)', marginBottom: '1.5rem'
               }}>03 — Landscape Series</div>
               <p style={{
-                fontFamily: "'Courier New', monospace", fontSize: '.82rem',
-                lineHeight: 1.9, color: 'rgba(255,255,255,0.55)'
+                fontFamily: 'var(--font-mono)', fontSize: '.82rem',
+                lineHeight: 1.9, color: 'var(--muted)'
               }}>
                 Cambodia's landscapes stretch far beyond the city —
                 from the Mekong's edge to the highland forests of Mondulkiri.
@@ -591,18 +593,18 @@ export default function GalleryPage({ photos }) {
                     transition: 'transform .35s ease, opacity .35s ease'
                   }}>
                     <div style={{
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                       fontSize: '2rem', fontWeight: 300,
-                      color: '#ffffff', marginBottom: '.4rem'
+                      color: 'var(--text)', marginBottom: '.4rem'
                     }}>{photo.title}</div>
                     <div style={{
-                      fontFamily: "'Courier New', monospace", fontSize: '.65rem',
-                      letterSpacing: '.15em', textTransform: 'uppercase', color: '#c8a96e'
+                      fontFamily: 'var(--font-mono)', fontSize: '.65rem',
+                      letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--accent)'
                     }}>{photo.location}</div>
                     {photo.writeup && (
                       <div style={{
-                        fontFamily: "'Courier New', monospace", fontSize: '.72rem',
-                        lineHeight: 1.6, color: 'rgba(255,255,255,0.6)', marginTop: '.8rem'
+                        fontFamily: 'var(--font-mono)', fontSize: '.72rem',
+                        lineHeight: 1.6, color: 'var(--text-muted)', marginTop: '.8rem'
                       }}>{photo.writeup}</div>
                     )}
                   </div>
@@ -622,7 +624,7 @@ export default function GalleryPage({ photos }) {
               fontFamily: 'var(--font-garamond)', fontSize: 'clamp(3rem,5vw,4.5rem)',
               fontStyle: 'italic', letterSpacing: '-.02em', whiteSpace: 'nowrap'
             }}>People & Portraits</h2>
-            <div style={{ flex: 1, height: 1, background: 'rgba(240,235,227,.1)' }}/>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
             <span style={{
               fontFamily: 'var(--font-mono)', fontSize: '.7rem',
               letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--accent)'
@@ -719,19 +721,19 @@ export default function GalleryPage({ photos }) {
 
       {/* ══ FOOTER ══ */}
       <div style={{
-        padding: '5rem 4rem', borderTop: '1px solid rgba(240,235,227,.08)',
+        padding: '2.5rem 4rem', borderTop: '1px solid var(--border)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
         <div style={{
-          fontFamily: 'var(--font-mono)', fontSize: '.7rem',
+          fontFamily: 'var(--font-mono)', fontSize: '12px',
           letterSpacing: '.15em', color: 'var(--muted)'
         }}>
           {fmt(all.length)} photographs — Cambodia
         </div>
         <div style={{
-          fontFamily: 'var(--font-mono)', fontSize: '.7rem',
+          fontFamily: 'var(--font-mono)', fontSize: '12px',
           letterSpacing: '.15em', color: 'var(--muted)'
-        }}>WRD Photography © 2025</div>
+        }}>WRD Photography © 2026</div>
       </div>
 
       <style>{`

@@ -151,12 +151,12 @@ export default function FeaturedPage({ photos }) {
           }}>
             <div style={{
               fontFamily: 'var(--font-mono)', fontSize: '.75rem',
-              letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--accent)',
+              letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--accent-on-image)',
               marginBottom: '.5rem'
             }}>{photo.location}</div>
             <div style={{
               fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-              color: 'var(--muted)', letterSpacing: '.1em'
+              color: 'var(--text-on-image-muted)', letterSpacing: '.1em'
             }}>{photo.date}</div>
           </div>
 
@@ -168,7 +168,7 @@ export default function FeaturedPage({ photos }) {
             <div className="caption" style={{
               fontFamily: 'var(--font-mono)', fontSize: '.75rem',
               letterSpacing: '.2em', textTransform: 'uppercase',
-              color: 'var(--accent)', marginBottom: '1.2rem'
+              color: 'var(--accent-on-image)', marginBottom: '1.2rem'
             }}>
               {fmt(idx + 1)} — {photo.series}
             </div>
@@ -179,14 +179,16 @@ export default function FeaturedPage({ photos }) {
                   <span className="text-line" style={{
                     display: 'block', fontFamily: 'var(--font-garamond)',
                     fontSize: '6.5rem', lineHeight: '.95',
-                    fontStyle: 'italic', letterSpacing: '-.03em'
+                    fontStyle: 'italic', letterSpacing: '-.03em',
+                    color: 'var(--text-on-image)'
                   }}>
                     {photo.title.split(' ').slice(0, Math.ceil(photo.title.split(' ').length / 2)).join(' ')}
                   </span>
                   <span className="text-line" style={{
                     display: 'block', fontFamily: 'var(--font-garamond)',
                     fontSize: '6.5rem', lineHeight: '.95',
-                    fontStyle: 'italic', letterSpacing: '-.03em'
+                    fontStyle: 'italic', letterSpacing: '-.03em',
+                    color: 'var(--text-on-image)'
                   }}>
                     {photo.title.split(' ').slice(Math.ceil(photo.title.split(' ').length / 2)).join(' ')}
                   </span>
@@ -195,7 +197,8 @@ export default function FeaturedPage({ photos }) {
                 <span className="text-line" style={{
                   display: 'block', fontFamily: 'var(--font-garamond)',
                   fontSize: '6.5rem', lineHeight: '.95',
-                  fontStyle: 'italic', letterSpacing: '-.03em'
+                  fontStyle: 'italic', letterSpacing: '-.03em',
+                  color: 'var(--text-on-image)'
                 }}>
                   {photo.title}
                 </span>
@@ -206,7 +209,7 @@ export default function FeaturedPage({ photos }) {
               <div className="writeup" style={{
                 marginTop: '1.8rem', maxWidth: '36rem',
                 fontFamily: 'var(--font-mono)', fontSize: '.8rem',
-                lineHeight: 1.7, color: 'var(--muted)', letterSpacing: '.03em'
+                lineHeight: 1.7, color: 'var(--text-on-image-muted)', letterSpacing: '.03em'
               }}>
                 {photo.writeup}
               </div>
@@ -231,7 +234,7 @@ export default function FeaturedPage({ photos }) {
           </div>
         </div>
         <div style={{ width: 30, height: 1, background: 'var(--muted)' }}/>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--muted)' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--muted-on-image)' }}>
           {fmt(TOTAL)}
         </div>
       </div>
@@ -245,7 +248,7 @@ export default function FeaturedPage({ photos }) {
         {photos.map((_, i) => (
           <div key={i} style={{
             width: 4, height: 4, borderRadius: '50%',
-            background: i === current ? 'var(--accent)' : 'var(--muted)',
+            background: i === current ? 'var(--accent-on-image)' : 'var(--muted-on-image)',
             transform: i === current ? 'scale(1.6)' : 'scale(1)',
             transition: 'background .3s, transform .3s'
           }}/>
@@ -256,7 +259,7 @@ export default function FeaturedPage({ photos }) {
       <div style={{
         position: 'fixed', bottom: '3.5rem', left: '4rem', zIndex: 10,
         fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-        letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--muted)'
+        letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--muted-on-image)'
       }}>
         scroll / click
       </div>

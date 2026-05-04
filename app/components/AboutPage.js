@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { urlFor } from '@/sanity/lib/image'
 
-export default function AboutPage({ onNavigate }) {
+export default function AboutPage({ onNavigate, heroImage, collageImages = [] }) {
   const containerRef  = useRef(null)
   const initedRef     = useRef(false)
   const titleRef      = useRef(null)
@@ -172,6 +173,29 @@ export default function AboutPage({ onNavigate }) {
     el.style.transition = 'transform .5s cubic-bezier(.25,1,.5,1)'
   }
 
+  const defaultHeroUrl = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85'
+  const heroUrl = heroImage
+    ? urlFor(heroImage).width(1200).quality(85).url()
+    : defaultHeroUrl
+
+  const collageLayout = [
+    { h: '60rem' },
+    { h: '36rem' },
+    { h: '36rem', mt: '8rem' }
+  ]
+  const collageFallbacks = [
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=82',
+    'https://images.unsplash.com/photo-1517999144091-3d9dca6d1e43?w=900&q=82',
+    'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=900&q=82'
+  ]
+  const collageList = collageLayout.map((layout, i) => {
+    const img = collageImages[i]
+    return {
+      ...layout,
+      url: img ? urlFor(img).width(900).quality(82).url() : collageFallbacks[i]
+    }
+  })
+
   return (
     <div ref={containerRef} className="page-scroll" style={{ background: 'var(--dark)' }}>
 
@@ -225,44 +249,10 @@ export default function AboutPage({ onNavigate }) {
             <div className="about-hero-img" style={{
               position: 'absolute', top: '-15%', left: 0,
               width: '100%', height: '130%',
-              background: 'url(https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85) center/cover no-repeat'
+              background: `url(${heroUrl}) center/cover no-repeat`
             }}/>
           </div>
         </div>
-      </div>
-
-      {/* ══ STATS ══ */}
-      <div style={{
-        padding: '6rem 4rem', display: 'grid',
-        gridTemplateColumns: 'repeat(4,1fr)',
-        borderTop: '1px solid rgba(240,235,227,.08)',
-        borderBottom: '1px solid rgba(240,235,227,.08)'
-      }}>
-        {[
-          { num: 130, label: 'Photographs', suffix: '+' },
-          { num: 3,   label: 'Years active', suffix: '' },
-          { num: 12,  label: 'Provinces covered', suffix: '' },
-          { num: 5,   label: 'Series ongoing', suffix: '' },
-        ].map((stat, i) => (
-          <div key={i} style={{
-            padding: '3rem 2rem',
-            borderRight: i < 3 ? '1px solid rgba(240,235,227,.08)' : 'none',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontFamily: 'var(--font-garamond)', fontStyle: 'italic',
-              fontSize: '5rem', lineHeight: 1, color: 'var(--cream)',
-              letterSpacing: '-.03em', marginBottom: '.8rem'
-            }}>
-              <span className="stat-number" data-target={stat.num}>0</span>
-              <span style={{ color: 'var(--accent)' }}>{stat.suffix}</span>
-            </div>
-            <div style={{
-              fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-              letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--muted)'
-            }}>{stat.label}</div>
-          </div>
-        ))}
       </div>
 
       {/* ══ PHILOSOPHY ══ */}
@@ -297,16 +287,12 @@ export default function AboutPage({ onNavigate }) {
         display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
         gap: '1.6rem', alignItems: 'start'
       }}>
-        {[
-          { url: 'photo-1558618666-fcd25c85cd64', h: '60rem' },
-          { url: 'photo-1517999144091-3d9dca6d1e43', h: '36rem' },
-          { url: 'photo-1500530855697-b586d89ba3ee', h: '36rem', mt: '8rem' },
-        ].map((img, i) => (
+        {collageList.map((img, i) => (
           <div key={i} className="collage-img" style={{
             overflow: 'hidden', marginTop: img.mt || 0
           }}>
             <img
-              src={`https://images.unsplash.com/${img.url}?w=900&q=82`}
+              src={img.url}
               alt="WRD Photography"
               style={{
                 width: '100%', height: img.h, objectFit: 'cover', display: 'block'
@@ -324,7 +310,7 @@ export default function AboutPage({ onNavigate }) {
             fontSize: 'clamp(3rem,5vw,4.5rem)', letterSpacing: '-.02em', whiteSpace: 'nowrap'
           }}>The Approach</h2>
           <div className="divider-line" style={{
-            flex: 1, height: 1, background: 'rgba(240,235,227,.15)'
+            flex: 1, height: 1, background: 'var(--border-strong)'
           }}/>
         </div>
 
@@ -351,7 +337,7 @@ export default function AboutPage({ onNavigate }) {
             <div key={item.num} className="approach-item" style={{ position: 'relative' }}>
               <div className="approach-num" style={{
                 fontFamily: 'var(--font-garamond)', fontStyle: 'italic',
-                fontSize: '6rem', lineHeight: 1, color: 'rgba(240,235,227,.06)',
+                fontSize: '6rem', lineHeight: 1, color: 'var(--text-faint)',
                 position: 'absolute', top: '-2rem', left: '-1rem',
                 letterSpacing: '-.03em', pointerEvents: 'none'
               }}>{item.num}</div>
@@ -427,13 +413,13 @@ export default function AboutPage({ onNavigate }) {
             style={{
               fontFamily: 'var(--font-mono)', fontSize: '.8rem', letterSpacing: '.2em',
               textTransform: 'uppercase', padding: '1.6rem 3.5rem',
-              background: 'transparent', border: '1px solid rgba(240,235,227,.3)',
+              background: 'transparent', border: '1px solid var(--border-strong)',
               color: 'var(--cream)', cursor: 'none',
               transition: 'border-color .3s, transform .5s cubic-bezier(.25,1,.5,1)'
             }}
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--cream)'}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(240,235,227,.3)'
+              e.currentTarget.style.borderColor = 'var(--border-strong)'
               onBtnLeave(e.currentTarget)
             }}
           >View Gallery</button>
@@ -442,7 +428,7 @@ export default function AboutPage({ onNavigate }) {
 
       {/* ══ FOOTER ══ */}
       <div style={{
-        padding: '4rem', borderTop: '1px solid rgba(240,235,227,.08)',
+        padding: '2.5rem 4rem', borderTop: '1px solid var(--border)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
         <div style={{
@@ -450,8 +436,8 @@ export default function AboutPage({ onNavigate }) {
           letterSpacing: '.2em', color: 'var(--cream)'
         }}>WRD Photography</div>
         <div style={{
-          fontFamily: 'var(--font-mono)', fontSize: '.7rem', color: 'var(--muted)'
-        }}>© 2025 — All rights reserved</div>
+          fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--muted)'
+        }}>© 2026 — All rights reserved</div>
         <div style={{ display: 'flex', gap: '2rem' }}>
           {['Instagram', 'Facebook'].map(s => (
             <a key={s} href="#" style={{

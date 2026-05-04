@@ -3,25 +3,63 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  color-scheme: dark;
   --cream: #f0ebe3;
   --dark:  #0a0a08;
   --mid:   #1a1a16;
   --accent:#c8a96e;
   --muted: rgba(255,255,255,0.55);
-  --font-sans: var(--jakarta-font, 'Plus Jakarta Sans', sans-serif);
-  --font-mono: 'Courier New', monospace;
+  --text: #ffffff;
+  --text-muted: rgba(255,255,255,0.6);
+  --text-muted-strong: rgba(255,255,255,0.4);
+  --text-faint: rgba(255,255,255,0.3);
+  --text-on-image: #f7f3ec;
+  --text-on-image-muted: rgba(247,243,236,0.72);
+  --accent-on-image: #e6c78a;
+  --muted-on-image: rgba(247,243,236,0.6);
+  --panel: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.2);
+  --border-strong: rgba(255,255,255,0.6);
+  --overlay: rgba(0,0,0,0.96);
+  --font-sans: var(--font-manrope, 'Manrope', sans-serif);
+  --font-display: var(--font-caslon-display, 'Libre Caslon Display', serif);
+  --font-mono: var(--font-jetbrains-mono, 'JetBrains Mono', monospace);
+  --font-garamond: var(--font-display);
 }
 
-html { font-size: 10px; }
+[data-theme="light"] {
+  color-scheme: light;
+  --cream: #1a1916;
+  --dark:  #f5f2ed;
+  --mid:   #ffffff;
+  --accent:#8c6a32;
+  --muted: rgba(26,25,22,0.6);
+  --text: #1a1916;
+  --text-muted: rgba(26,25,22,0.6);
+  --text-muted-strong: rgba(26,25,22,0.45);
+  --text-faint: rgba(26,25,22,0.3);
+  --text-on-image: #f7f3ec;
+  --text-on-image-muted: rgba(247,243,236,0.72);
+  --accent-on-image: #e6c78a;
+  --muted-on-image: rgba(247,243,236,0.6);
+  --panel: rgba(26,25,22,0.06);
+  --border: rgba(26,25,22,0.18);
+  --border-strong: rgba(26,25,22,0.4);
+  --overlay: rgba(250,247,242,0.96);
+}
+
+html { font-size: 16px; }
 
 body {
   background: var(--dark);
-  color: #ffffff;
+  color: var(--text);
   font-family: var(--font-sans);
+  font-weight: 800;
   overflow: hidden;
   height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color .25s ease, color .25s ease;
 }
 
 .page-scroll {

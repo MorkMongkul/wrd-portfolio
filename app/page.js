@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { client } from '@/sanity/lib/client'
-import { featuredPhotosQuery, allPhotosQuery } from '@/sanity/lib/queries'
+import { featuredPhotosQuery, allPhotosQuery, galleryHeroQuery, aboutPageQuery } from '@/sanity/lib/queries'
 import dynamic from 'next/dynamic'
 import Nav from './components/Nav'
 import Cursor from './components/Cursor'
@@ -16,6 +16,8 @@ export default function Home() {
   const [switching, setSwitching]     = useState(false)
   const [featuredPhotos, setFeatured] = useState([])
   const [allPhotos, setAllPhotos]     = useState([])
+  const [galleryHeroImage, setGalleryHeroImage] = useState(null)
+  const [aboutImages, setAboutImages] = useState({ heroImage: null, collageImages: [] })
   const [dataLoaded, setDataLoaded] = useState(false)
   const [introDone, setIntroDone] = useState(false)
   const [pageEntered, setPageEntered] = useState(false)
@@ -105,14 +107,21 @@ export default function Home() {
     let mounted = true
 
     async function fetchPhotos() {
-      const [featured, all] = await Promise.all([
+      const [featured, all, settings, about] = await Promise.all([
         client.fetch(featuredPhotosQuery),
-        client.fetch(allPhotosQuery)
+        client.fetch(allPhotosQuery),
+        client.fetch(galleryHeroQuery),
+        client.fetch(aboutPageQuery)
       ])
 
       if (!mounted) return
       setFeatured(featured)
       setAllPhotos(all)
+      setGalleryHeroImage(settings?.galleryHeroImage || null)
+      setAboutImages({
+        heroImage: about?.heroImage || null,
+        collageImages: about?.collageImages || []
+      })
       setDataLoaded(true)
     }
 
@@ -144,7 +153,7 @@ export default function Home() {
       style={{
       position: 'fixed',
       inset: 0,
-      background: '#0a0a0a',
+      background: 'var(--dark)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
@@ -166,7 +175,7 @@ export default function Home() {
           fontWeight="700"
           letterSpacing="8"
           fill="none"
-          stroke="#ffffff"
+          stroke="var(--text)"
           strokeWidth="1.5"
 
           // CRITICAL SMOOTHING FIX
@@ -194,8 +203,19 @@ export default function Home() {
         transition: 'opacity .6s ease, transform .6s ease'
       }}>
         {activePage === 'featured' && <FeaturedPage photos={featuredPhotos} />}
-        {activePage === 'gallery'  && <GalleryPage  photos={allPhotos} />}
-        {activePage === 'about'    && <AboutPage onNavigate={navigate} />}
+        {activePage === 'gallery'  && (
+          <GalleryPage
+            photos={allPhotos}
+            heroImage={galleryHeroImage}
+          />
+        )}
+        {activePage === 'about'    && (
+          <AboutPage
+            onNavigate={navigate}
+            heroImage={aboutImages.heroImage}
+            collageImages={aboutImages.collageImages}
+          />
+        )}
       </div>
     </>
   )

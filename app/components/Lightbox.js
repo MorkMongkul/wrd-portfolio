@@ -100,7 +100,7 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
       onClick={e => { if (e.target === overlayRef.current) handleClose() }}
       style={{
         position: 'fixed', inset: 0, zIndex: 99999,
-        background: 'rgba(0,0,0,0.96)',
+        background: 'var(--overlay)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '2rem',
       }}
@@ -120,13 +120,13 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
           })
         }}
         style={{
-          position: 'fixed', top: '2rem', right: '2rem',
+          position: 'fixed', top: '6rem', right: '2rem',
           width: '48px', height: '48px',
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
           borderRadius: '50%', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#ffffff', fontSize: '20px', zIndex: 100000,
+          color: 'var(--text)', fontSize: '20px', zIndex: 100000,
         }}
       >✕</button>
 
@@ -134,8 +134,8 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
       <div style={{
         position: 'fixed', top: '2.4rem', left: '50%',
         transform: 'translateX(-50%)',
-        fontFamily: "'Courier New', monospace", fontSize: '12px',
-        letterSpacing: '3px', color: 'rgba(255,255,255,0.4)',
+        fontFamily: 'var(--font-mono)', fontSize: '12px',
+        letterSpacing: '3px', color: 'var(--text-muted-strong)',
         zIndex: 100000,
       }}>
         {fmt(currentIndex + 1)} / {fmt(photos.length)}
@@ -178,27 +178,27 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
         >
           {/* series */}
           <div style={{
-            fontFamily: "'Courier New', monospace", fontSize: '11px',
-            letterSpacing: '3px', textTransform: 'uppercase', color: '#c8a96e',
+            fontFamily: 'var(--font-mono)', fontSize: '11px',
+            letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--accent)',
           }}>{photo.series}</div>
 
           {/* title */}
           <h2 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontSize: 'clamp(2.5rem,4vw,3.5rem)', fontWeight: 300,
-            lineHeight: 1, letterSpacing: '-1px', color: '#ffffff',
+            lineHeight: 1, letterSpacing: '-1px', color: 'var(--text)',
           }}>{photo.title}</h2>
 
           {/* divider */}
           <div style={{
-            width: '3rem', height: '1px', background: '#c8a96e'
+            width: '3rem', height: '1px', background: 'var(--accent)'
           }}/>
 
           {/* writeup */}
           {photo.writeup && (
             <p style={{
-              fontFamily: "'Courier New', monospace", fontSize: '13px',
-              lineHeight: 1.9, color: 'rgba(255,255,255,0.6)',
+              fontFamily: 'var(--font-mono)', fontSize: '13px',
+              lineHeight: 1.9, color: 'var(--text-muted)',
               letterSpacing: '0.3px',
             }}>{photo.writeup}</p>
           )}
@@ -208,26 +208,26 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
             {photo.location && (
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <span style={{
-                  fontFamily: "'Courier New', monospace", fontSize: '11px',
+                  fontFamily: 'var(--font-mono)', fontSize: '11px',
                   letterSpacing: '2px', textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.3)', minWidth: '6rem'
+                  color: 'var(--text-faint)', minWidth: '6rem'
                 }}>Location</span>
                 <span style={{
-                  fontFamily: "'Courier New', monospace", fontSize: '12px',
-                  color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px'
+                  fontFamily: 'var(--font-mono)', fontSize: '12px',
+                  color: 'var(--text-muted)', letterSpacing: '0.5px'
                 }}>{photo.location}</span>
               </div>
             )}
             {photo.date && (
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <span style={{
-                  fontFamily: "'Courier New', monospace", fontSize: '11px',
+                  fontFamily: 'var(--font-mono)', fontSize: '11px',
                   letterSpacing: '2px', textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.3)', minWidth: '6rem'
+                  color: 'var(--text-faint)', minWidth: '6rem'
                 }}>Date</span>
                 <span style={{
-                  fontFamily: "'Courier New', monospace", fontSize: '12px',
-                  color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px'
+                  fontFamily: 'var(--font-mono)', fontSize: '12px',
+                  color: 'var(--text-muted)', letterSpacing: '0.5px'
                 }}>{photo.date}</span>
               </div>
             )}
@@ -251,22 +251,22 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
                 })
               }}
               style={{
-                fontFamily: "'Courier New', monospace", fontSize: '12px',
+                fontFamily: 'var(--font-mono)', fontSize: '12px',
                 letterSpacing: '2px', textTransform: 'uppercase',
                 padding: '1rem 2rem', cursor: 'pointer',
                 background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: 'rgba(255,255,255,0.6)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-muted)',
                 transition: 'border-color .2s, color .2s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'
-                e.currentTarget.style.color = '#ffffff'
+                e.currentTarget.style.borderColor = 'var(--border-strong)'
+                e.currentTarget.style.color = 'var(--text)'
                 gsapRef.current?.to(e.currentTarget, { x: -4, duration: .2 })
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
-                e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.color = 'var(--text-muted)'
                 gsapRef.current?.to(e.currentTarget, { x: 0, duration: .2 })
               }}
             >← Prev</button>
@@ -275,22 +275,22 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
               className="lb-nav-btn"
               onClick={onNext}
               style={{
-                fontFamily: "'Courier New', monospace", fontSize: '12px',
+                fontFamily: 'var(--font-mono)', fontSize: '12px',
                 letterSpacing: '2px', textTransform: 'uppercase',
                 padding: '1rem 2rem', cursor: 'pointer',
                 background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: 'rgba(255,255,255,0.6)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-muted)',
                 transition: 'border-color .2s, color .2s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'
-                e.currentTarget.style.color = '#ffffff'
+                e.currentTarget.style.borderColor = 'var(--border-strong)'
+                e.currentTarget.style.color = 'var(--text)'
                 gsapRef.current?.to(e.currentTarget, { x: 4, duration: .2 })
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
-                e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.color = 'var(--text-muted)'
                 gsapRef.current?.to(e.currentTarget, { x: 0, duration: .2 })
               }}
             >Next →</button>

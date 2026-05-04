@@ -1,65 +1,202 @@
-import Image from "next/image";
+'use client'
+import { useState, useEffect, useRef } from 'react'
+import { client } from '@/sanity/lib/client'
+import { featuredPhotosQuery, allPhotosQuery } from '@/sanity/lib/queries'
+import dynamic from 'next/dynamic'
+import Nav from './components/Nav'
+import Cursor from './components/Cursor'
+
+const FeaturedPage = dynamic(() => import('./components/FeaturedPage'), { ssr: false })
+const GalleryPage  = dynamic(() => import('./components/GalleryPage'),  { ssr: false })
+const AboutPage    = dynamic(() => import('./components/AboutPage'),    { ssr: false })
+
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+  const [activePage, setActivePage]   = useState('featured')
+  const [switching, setSwitching]     = useState(false)
+  const [featuredPhotos, setFeatured] = useState([])
+  const [allPhotos, setAllPhotos]     = useState([])
+  const [dataLoaded, setDataLoaded] = useState(false)
+  const [introDone, setIntroDone] = useState(false)
+  const [pageEntered, setPageEntered] = useState(false)
+
+  const introTitleRef = useRef(null)
+  const introWrapRef = useRef(null)
+
+  // -------------------------------
+  // GSAP INTRO ANIMATION (FIXED)
+  // -------------------------------
+  const showIntro = !introDone || !dataLoaded
+
+  useEffect(() => {
+    if (showIntro) return
+    const id = requestAnimationFrame(() => setPageEntered(true))
+    return () => cancelAnimationFrame(id)
+  }, [showIntro])
+
+  useEffect(() => {
+    if (!showIntro) return
+    let mounted = true
+
+    ;(async () => {
+      const { gsap } = await import('gsap')
+      if (!mounted) return
+
+      const textEl = introTitleRef.current
+      if (!textEl) return
+
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready
+      }
+
+      const len = (typeof textEl.getComputedTextLength === 'function')
+        ? Math.ceil(textEl.getComputedTextLength() * 1.15)
+        : 3000
+
+      gsap.set(textEl, {
+        strokeDasharray: len,
+        strokeDashoffset: len,
+        fillOpacity: 0
+      })
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          if (!mounted) return
+          const wrapEl = introWrapRef.current
+          if (!wrapEl) {
+            setIntroDone(true)
+            return
+          }
+          gsap.to(wrapEl, {
+            opacity: 0,
+            duration: 0.2,
+            ease: 'power2.out',
+            onComplete: () => {
+              if (mounted) setIntroDone(true)
+            }
+          })
+        }
+      })
+
+      // smooth draw
+      tl.to(textEl, {
+        strokeDashoffset: 0,
+        duration: 3.6,
+        ease: 'power1.inOut'
+      }, 0.1)
+
+      // fill after a short hold
+      tl.to(textEl, {
+        fillOpacity: 1,
+        strokeWidth: 0,
+        duration: 0.9,
+        ease: 'power2.out'
+      }, '+=0.15')
+
+    })()
+
+    return () => { mounted = false }
+  }, [showIntro])
+
+  // -------------------------------
+  // FETCH DATA
+  // -------------------------------
+  useEffect(() => {
+    let mounted = true
+
+    async function fetchPhotos() {
+      const [featured, all] = await Promise.all([
+        client.fetch(featuredPhotosQuery),
+        client.fetch(allPhotosQuery)
+      ])
+
+      if (!mounted) return
+      setFeatured(featured)
+      setAllPhotos(all)
+      setDataLoaded(true)
+    }
+
+    fetchPhotos()
+
+    return () => { mounted = false }
+  }, [])
+
+  // -------------------------------
+  // NAVIGATION
+  // -------------------------------
+  function navigate(target) {
+    if (target === activePage || switching) return
+
+    setSwitching(true)
+
+    setTimeout(() => {
+      setActivePage(target)
+      setSwitching(false)
+    }, 400)
+  }
+
+  // -------------------------------
+  // LOADING SCREEN (FIXED SVG)
+  // -------------------------------
+  if (showIntro) return (
+    <div
+      ref={introWrapRef}
+      style={{
+      position: 'fixed',
+      inset: 0,
+      background: '#0a0a0a',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <svg
+        width="1000"
+        height="140"
+        viewBox="0 0 1000 140"
+        preserveAspectRatio="xMidYMid meet"
+        style={{ width: '90vw', maxWidth: '1000px', height: 'auto', overflow: 'visible' }}
+      >
+        <text
+          ref={introTitleRef}
+          x="500"
+          y="95"
+          textAnchor="middle"
+          fontFamily="'Inter', sans-serif"
+          fontSize="72"
+          fontWeight="700"
+          letterSpacing="8"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="1.5"
+
+          // CRITICAL SMOOTHING FIX
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          shapeRendering="geometricPrecision"
+        >
+          WRD PHOTOGRAPHY
+        </text>
+      </svg>
     </div>
-  );
+  )
+
+  // -------------------------------
+  // MAIN UI
+  // -------------------------------
+  return (
+    <>
+      <Cursor />
+      <Nav activePage={activePage} onNavigate={navigate} />
+
+      <div style={{
+        opacity: switching ? 0 : (pageEntered ? 1 : 0),
+        transform: pageEntered ? 'translateY(0px)' : 'translateY(10px)',
+        transition: 'opacity .6s ease, transform .6s ease'
+      }}>
+        {activePage === 'featured' && <FeaturedPage photos={featuredPhotos} />}
+        {activePage === 'gallery'  && <GalleryPage  photos={allPhotos} />}
+        {activePage === 'about'    && <AboutPage onNavigate={navigate} />}
+      </div>
+    </>
+  )
 }

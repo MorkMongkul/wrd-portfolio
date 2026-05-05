@@ -62,6 +62,26 @@ body {
   transition: background-color .25s ease, color .25s ease;
 }
 
+.page-clip {
+  position: relative;
+  clip-path: inset(0 0 0 0);
+  will-change: clip-path;
+}
+
+.page-clip--in {
+  animation: clipReveal 1s cubic-bezier(.25,1,.5,1) both;
+}
+
+@keyframes clipReveal {
+  0%   { clip-path: inset(0 100% 0 0); }
+  82%  { clip-path: inset(0 -2% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-clip--in { animation: none; }
+}
+
 .page-scroll {
   overflow-y: scroll;
   overflow-x: hidden;

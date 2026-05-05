@@ -202,20 +202,25 @@ export default function Home() {
         transform: pageEntered ? 'translateY(0px)' : 'translateY(10px)',
         transition: 'opacity .6s ease, transform .6s ease'
       }}>
-        {activePage === 'featured' && <FeaturedPage photos={featuredPhotos} />}
-        {activePage === 'gallery'  && (
-          <GalleryPage
-            photos={allPhotos}
-            heroImage={galleryHeroImage}
-          />
-        )}
-        {activePage === 'about'    && (
-          <AboutPage
-            onNavigate={navigate}
-            heroImage={aboutImages.heroImage}
-            collageImages={aboutImages.collageImages}
-          />
-        )}
+        <div
+          key={activePage}
+          className={pageEntered ? 'page-clip page-clip--in' : 'page-clip'}
+        >
+          {activePage === 'featured' && <FeaturedPage photos={featuredPhotos} />}
+          {activePage === 'gallery'  && (
+            <GalleryPage
+              photos={allPhotos}
+              heroImage={galleryHeroImage}
+            />
+          )}
+          {activePage === 'about'    && (
+            <AboutPage
+              onNavigate={navigate}
+              heroImage={aboutImages.heroImage}
+              collageImages={aboutImages.collageImages}
+            />
+          )}
+        </div>
       </div>
     </>
   )

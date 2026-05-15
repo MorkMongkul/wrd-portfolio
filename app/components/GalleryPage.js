@@ -1,14 +1,19 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useGSAP } from '@gsap/react'
 import { urlFor } from '@/sanity/lib/image'
 import Lightbox from './Lightbox'
+
+gsap.registerPlugin(ScrollTrigger, useGSAP)
 
 export default function GalleryPage({ photos, heroImage }) {
   const containerRef  = useRef(null)
   const heroTitleRef  = useRef(null)
   const heroEyeRef    = useRef(null)
   const trackRef      = useRef(null)
-  const initedRef     = useRef(false)
+  const gsapCtxRef    = useRef(null)
   const [activeFilter, setActiveFilter] = useState('all')
   const [hoveredCard, setHoveredCard]   = useState(null)
   const [lightboxPhoto, setLightboxPhoto] = useState(null)
@@ -36,51 +41,30 @@ export default function GalleryPage({ photos, heroImage }) {
     setLightboxPhoto(next)
   }
 
+  function lightboxGoTo(photo) {
+    setLightboxPhoto(photo)
+  }
+
   const street    = photos.filter(p => p.series === 'street')
+  const streetHoriz   = street.slice(0, 6)
+  const streetMasonry = street.slice(6)
   const rural     = photos.filter(p => p.series === 'rural')
   const landscape = photos.filter(p => p.series === 'landscape')
   const portraits = photos.filter(p => p.series === 'portraits')
   const all       = photos
 
-  const filtered = activeFilter === 'all'      ? all
-                 : activeFilter === 'street'   ? street
-                 : activeFilter === 'rural'    ? rural
-                 : activeFilter === 'portraits'? portraits
-                 : all
-
-  useEffect(() => {
-    if (initedRef.current) return
-    initedRef.current = true
-
-    async function init() {
-      const { gsap }          = await import('gsap')
-      const { ScrollTrigger } = await import('gsap/ScrollTrigger')
-      gsap.registerPlugin(ScrollTrigger)
-
+  const { context } = useGSAP(() => {
       const scroller = containerRef.current
       if (!scroller) return
 
-      // ── HERO TEXT CHARACTER SPLIT REVEAL ──
+      // ── HERO TEXT LINE REVEAL ──
       const heroTitle = heroTitleRef.current
       if (heroTitle) {
-        const text  = heroTitle.textContent
-        heroTitle.innerHTML = ''
-        const lines = text.split('\n').filter(Boolean)
-
-        lines.forEach((line, li) => {
-          const lineEl = document.createElement('div')
-          lineEl.style.cssText = 'overflow:hidden; display:block;'
-          const inner = document.createElement('div')
-          inner.style.cssText = 'display:block; transform:translateY(110%);'
-          inner.textContent = line
-          lineEl.appendChild(inner)
-          heroTitle.appendChild(lineEl)
-
-          gsap.to(inner, {
-            y: '0%', duration: 1.4,
-            ease: 'power4.out', delay: .6 + li * .15,
-            scrollTrigger: { trigger: '.gallery-hero', scroller, start: 'top 90%' }
-          })
+        const lines = heroTitle.querySelectorAll('.hero-line-inner')
+        gsap.from(lines, {
+          y: '110%', duration: 1.4, stagger: .15,
+          ease: 'power4.out', delay: .6,
+          scrollTrigger: { trigger: '.gallery-hero', scroller, start: 'top 90%' }
         })
       }
 
@@ -120,7 +104,7 @@ export default function GalleryPage({ photos, heroImage }) {
 
       // ── HORIZONTAL SCROLL TRACK ──
       const track = trackRef.current
-      if (track && street.length > 0) {
+      if (track && streetHoriz.length > 0) {
         const trackWrap = track.parentElement
         const getX = () => -(track.scrollWidth - trackWrap.offsetWidth - 80)
 
@@ -166,19 +150,14 @@ export default function GalleryPage({ photos, heroImage }) {
       })
 
       // ── MASONRY HEADER WORDS ──
-      const mHeader = document.querySelector('.masonry-title-text')
-      if (mHeader) {
-        const words = mHeader.textContent.split(' ')
-        mHeader.innerHTML = words.map(w =>
-          `<span style="display:inline-block;overflow:hidden;margin-right:.25em">
-            <span class="word-inner" style="display:inline-block;transform:translateY(110%)">${w}</span>
-          </span>`
-        ).join('')
-        gsap.to(mHeader.querySelectorAll('.word-inner'), {
-          y: '0%', duration: 1.1, stagger: .08, ease: 'power4.out',
+      gsap.utils.toArray(scroller.querySelectorAll('.masonry-title-text')).forEach(mHeader => {
+        const words = mHeader.querySelectorAll('.word-inner')
+        if (!words.length) return
+        gsap.from(words, {
+          y: '110%', duration: 1.1, stagger: .08, ease: 'power4.out',
           scrollTrigger: { trigger: mHeader, scroller, start: 'top 85%' }
         })
-      }
+      })
 
       // ── PORTRAITS — PINNED TEXT + IMAGE SCROLL ──
       if (portraits.length > 0) {
@@ -196,7 +175,7 @@ export default function GalleryPage({ photos, heroImage }) {
       }
 
       // ── COUNTER SCRUB ──
-      const counter = document.querySelector('.photo-counter')
+      const counter = scroller.querySelector('.photo-counter')
       if (counter) {
         gsap.to(counter, {
           opacity: 0, y: -20, ease: 'none',
@@ -208,16 +187,11 @@ export default function GalleryPage({ photos, heroImage }) {
       }
 
       ScrollTrigger.refresh()
-    }
 
-    init()
+  }, { scope: containerRef, dependencies: [photos, activeFilter], revertOnUpdate: true })
 
-    return () => {
-      import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
-        ScrollTrigger.getAll().forEach(t => t.kill())
-      })
-    }
-  }, [photos])
+  // keep ref in sync so click handlers can revert before React unmounts
+  gsapCtxRef.current = context
 
   // ── MAGNETIC FILTER BUTTONS ──
   function handleFilterMouse(e, btn) {
@@ -263,9 +237,9 @@ export default function GalleryPage({ photos, heroImage }) {
         <div className="photo-counter" style={{
           position: 'absolute', top: '9rem', right: '4rem',
           fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-          letterSpacing: '.2em', color: 'var(--muted)', textAlign: 'right'
+          letterSpacing: '.2em', color: 'var(--muted-on-image)', textAlign: 'right'
         }}>
-          <div style={{ fontSize: '3rem', color: 'var(--cream)', lineHeight: 1, marginBottom: '.4rem' }}>
+          <div style={{ fontSize: '3rem', color: 'var(--text-on-image)', lineHeight: 1, marginBottom: '.4rem' }}>
             {fmt(all.length)}
           </div>
           photographs
@@ -275,15 +249,20 @@ export default function GalleryPage({ photos, heroImage }) {
         <div style={{ position: 'relative', zIndex: 2 }}>
           <div ref={heroEyeRef} style={{
             fontFamily: 'var(--font-mono)', fontSize: '.75rem', letterSpacing: '.35em',
-            textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '2rem'
+            textTransform: 'uppercase', color: 'var(--accent-on-image)', marginBottom: '2rem'
           }}>Cambodia — 2023 / 2025</div>
 
           <h1 ref={heroTitleRef} style={{
             fontFamily: 'var(--font-garamond)', fontStyle: 'italic',
             fontSize: 'clamp(4rem,9vw,8rem)', lineHeight: .88,
-            letterSpacing: '-.03em', color: 'var(--cream)',
-            whiteSpace: 'pre-line'
-          }}>{`The Full\nArchive`}</h1>
+            letterSpacing: '-.03em', color: 'var(--text-on-image)'
+          }}>
+            {['The Full', 'Archive'].map((line, i) => (
+              <div key={i} style={{ overflow: 'hidden', display: 'block' }}>
+                <div className="hero-line-inner" style={{ display: 'block' }}>{line}</div>
+              </div>
+            ))}
+          </h1>
         </div>
 
         {/* scroll indicator */}
@@ -294,7 +273,7 @@ export default function GalleryPage({ photos, heroImage }) {
         }}>
           <div style={{
             fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-            letterSpacing: '.25em', textTransform: 'uppercase', color: 'var(--muted)'
+            letterSpacing: '.25em', textTransform: 'uppercase', color: 'var(--muted-on-image)'
           }}>scroll to explore</div>
           <div style={{
             width: 1, height: '4rem', background: 'var(--accent)',
@@ -323,10 +302,8 @@ export default function GalleryPage({ photos, heroImage }) {
           ].map(f => (
             <button
               key={f.id}
-              onClick={async () => {
-                const { ScrollTrigger } = await import('gsap/ScrollTrigger')
-                ScrollTrigger.getAll().forEach(t => t.kill())
-                initedRef.current = false
+              onClick={() => {
+                gsapCtxRef.current?.revert()
                 setActiveFilter(f.id)
               }}
               onMouseMove={e => handleFilterMouse(e, e.currentTarget)}
@@ -345,11 +322,11 @@ export default function GalleryPage({ photos, heroImage }) {
         </div>
       </div>
 
-      {/* ══ HORIZONTAL SCROLL — Street ══ */}
-      {street.length > 0 && (activeFilter === 'all' || activeFilter === 'street') && (
-        <div id="street-horiz" style={{ padding: '7rem 0 4rem', position: 'relative' }}>
+      {/* ══ HORIZONTAL SCROLL — Street (first 6) ══ */}
+      {streetHoriz.length > 0 && (activeFilter === 'all' || activeFilter === 'street') && (
+        <div id="street-horiz" style={{ padding: '3rem 0 2rem', position: 'relative' }}>
           <div className="section-label" style={{
-            padding: '0 4rem', marginBottom: '4rem',
+            padding: '0 4rem', marginBottom: '2rem',
             display: 'flex', alignItems: 'center', gap: '2rem'
           }}>
             <span style={{
@@ -368,7 +345,7 @@ export default function GalleryPage({ photos, heroImage }) {
               display: 'flex', gap: '2rem', padding: '0 4rem',
               width: 'max-content', alignItems: 'flex-end'
             }}>
-              {street.map((photo, i) => (
+              {streetHoriz.map((photo, i) => (
                 <div
                   key={photo._id}
                   className="horiz-card"
@@ -378,7 +355,7 @@ export default function GalleryPage({ photos, heroImage }) {
                   style={{
                     position: 'relative', overflow: 'hidden', flexShrink: 0,
                     width: i % 3 === 0 ? '42rem' : i % 3 === 1 ? '30rem' : '36rem',
-                    height: i % 3 === 0 ? '56rem' : i % 3 === 1 ? '38rem' : '46rem',
+                    height: i % 3 === 0 ? '65vh' : i % 3 === 1 ? '50vh' : '58vh',
                     cursor: 'none'
                   }}
                 >
@@ -410,17 +387,17 @@ export default function GalleryPage({ photos, heroImage }) {
                     <div style={{
                       fontFamily: 'var(--font-mono)', fontSize: '.65rem',
                       letterSpacing: '.2em', textTransform: 'uppercase',
-                      color: 'var(--accent)', marginBottom: '.8rem'
+                      color: 'var(--accent-on-image)', marginBottom: '.8rem'
                     }}>{photo.location}</div>
                     <div style={{
                       fontFamily: 'var(--font-garamond)', fontStyle: 'italic',
-                      fontSize: '2.4rem', color: 'var(--cream)', lineHeight: 1,
+                      fontSize: '2.4rem', color: 'var(--text-on-image)', lineHeight: 1,
                       marginBottom: '.8rem'
                     }}>{photo.title}</div>
                     {photo.writeup && hoveredCard === photo._id && (
                       <div style={{
                         fontFamily: 'var(--font-mono)', fontSize: '.72rem',
-                        lineHeight: 1.7, color: 'var(--text-muted)',
+                        lineHeight: 1.7, color: 'var(--text-on-image-muted)',
                         maxWidth: '32rem',
                         opacity: hoveredCard === photo._id ? 1 : 0,
                         transition: 'opacity .3s .1s'
@@ -432,11 +409,73 @@ export default function GalleryPage({ photos, heroImage }) {
                   <div style={{
                     position: 'absolute', top: '2rem', right: '2rem',
                     fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                    letterSpacing: '.15em', color: 'var(--text-muted-strong)'
+                    letterSpacing: '.15em', color: 'var(--muted-on-image)'
                   }}>{fmt(i + 1)}</div>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MASONRY — Street (remaining) ══ */}
+      {streetMasonry.length > 0 && (activeFilter === 'all' || activeFilter === 'street') && (
+        <div style={{ padding: '4rem 4rem 8rem' }}>
+          <div style={{ columns: 3, columnGap: '1.6rem' }}>
+            {streetMasonry.map((photo, i) => (
+              <div
+                key={photo._id}
+                className="masonry-item"
+                onClick={() => openLightbox(photo, street)}
+                onMouseEnter={() => setHoveredCard(photo._id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                style={{
+                  breakInside: 'avoid', marginBottom: '1.6rem',
+                  position: 'relative', overflow: 'hidden', cursor: 'none'
+                }}
+              >
+                <img
+                  src={urlFor(photo.image).width(800).quality(82).url()}
+                  alt={photo.title}
+                  style={{
+                    width: '100%', display: 'block',
+                    transform: hoveredCard === photo._id ? 'scale(1.05)' : 'scale(1)',
+                    transition: 'transform .7s cubic-bezier(.25,1,.5,1)'
+                  }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: hoveredCard === photo._id
+                    ? 'rgba(0,0,0,.62)'
+                    : 'rgba(0,0,0,0)',
+                  transition: 'background .4s',
+                  display: 'flex', flexDirection: 'column',
+                  justifyContent: 'flex-end', padding: '2rem'
+                }}>
+                  <div style={{
+                    transform: hoveredCard === photo._id ? 'translateY(0)' : 'translateY(16px)',
+                    opacity: hoveredCard === photo._id ? 1 : 0,
+                    transition: 'transform .35s ease, opacity .35s ease'
+                  }}>
+                    <div style={{
+                      fontFamily: 'var(--font-garamond)', fontStyle: 'italic',
+                      fontSize: '1.8rem', color: 'var(--text-on-image)', marginBottom: '.4rem'
+                    }}>{photo.title}</div>
+                    <div style={{
+                      fontFamily: 'var(--font-mono)', fontSize: '.65rem',
+                      letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--accent-on-image)'
+                    }}>{photo.location}</div>
+                    {photo.writeup && (
+                      <div style={{
+                        fontFamily: 'var(--font-mono)', fontSize: '.72rem',
+                        lineHeight: 1.6, color: 'var(--text-on-image-muted)',
+                        marginTop: '.8rem'
+                      }}>{photo.writeup}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -453,7 +492,13 @@ export default function GalleryPage({ photos, heroImage }) {
             <h2 className="masonry-title-text" style={{
               fontFamily: 'var(--font-garamond)', fontSize: 'clamp(3.5rem,6vw,5.5rem)',
               fontStyle: 'italic', lineHeight: .9, letterSpacing: '-.02em'
-            }}>Rural Cambodia</h2>
+            }}>
+              {'Rural Cambodia'.split(' ').map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', overflow: 'hidden', marginRight: '.25em' }}>
+                  <span className="word-inner" style={{ display: 'inline-block' }}>{word}</span>
+                </span>
+              ))}
+            </h2>
             <div>
               <div className="section-label" style={{
                 fontFamily: 'var(--font-mono)', fontSize: '.7rem',
@@ -509,16 +554,16 @@ export default function GalleryPage({ photos, heroImage }) {
                   }}>
                     <div style={{
                       fontFamily: 'var(--font-garamond)', fontStyle: 'italic',
-                      fontSize: '1.8rem', color: 'var(--cream)', marginBottom: '.4rem'
+                      fontSize: '1.8rem', color: 'var(--text-on-image)', marginBottom: '.4rem'
                     }}>{photo.title}</div>
                     <div style={{
                       fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                      letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--accent)'
+                      letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--accent-on-image)'
                     }}>{photo.location}</div>
                     {photo.writeup && (
                       <div style={{
                         fontFamily: 'var(--font-mono)', fontSize: '.72rem',
-                        lineHeight: 1.6, color: 'var(--text-muted)',
+                        lineHeight: 1.6, color: 'var(--text-on-image-muted)',
                         marginTop: '.8rem'
                       }}>{photo.writeup}</div>
                     )}
@@ -541,7 +586,13 @@ export default function GalleryPage({ photos, heroImage }) {
               fontFamily: 'var(--font-sans)',
               fontSize: 'clamp(3.5rem,6vw,5.5rem)',
               fontWeight: 300, lineHeight: .9, letterSpacing: '-.02em'
-            }}>Landscape</h2>
+            }}>
+              {'Landscape'.split(' ').map((word, i) => (
+                <span key={i} style={{ display: 'inline-block', overflow: 'hidden', marginRight: '.25em' }}>
+                  <span className="word-inner" style={{ display: 'inline-block' }}>{word}</span>
+                </span>
+              ))}
+            </h2>
             <div>
               <div className="section-label" style={{
                 fontFamily: 'var(--font-mono)', fontSize: '.7rem',
@@ -595,16 +646,16 @@ export default function GalleryPage({ photos, heroImage }) {
                     <div style={{
                       fontFamily: 'var(--font-sans)',
                       fontSize: '2rem', fontWeight: 300,
-                      color: 'var(--text)', marginBottom: '.4rem'
+                      color: 'var(--text-on-image)', marginBottom: '.4rem'
                     }}>{photo.title}</div>
                     <div style={{
                       fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                      letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--accent)'
+                      letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--accent-on-image)'
                     }}>{photo.location}</div>
                     {photo.writeup && (
                       <div style={{
                         fontFamily: 'var(--font-mono)', fontSize: '.72rem',
-                        lineHeight: 1.6, color: 'var(--text-muted)', marginTop: '.8rem'
+                        lineHeight: 1.6, color: 'var(--text-on-image-muted)', marginTop: '.8rem'
                       }}>{photo.writeup}</div>
                     )}
                   </div>
@@ -753,6 +804,7 @@ export default function GalleryPage({ photos, heroImage }) {
           onClose={closeLightbox}
           onPrev={lightboxPrev}
           onNext={lightboxNext}
+          onGoTo={lightboxGoTo}
         />
       )}
     </div>

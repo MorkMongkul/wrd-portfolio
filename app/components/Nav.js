@@ -28,6 +28,9 @@ export default function Nav({ activePage, onNavigate }) {
       const gsap = gsapRef.current
       if (!gsap || !navRef.current) return
 
+      // don't show nav when lightbox is open
+      if (document.querySelector('[data-lightbox]')) return
+
       if (e.clientY < 80 && hiddenRef.current) {
         gsap.to(navRef.current, {
           y: 0, opacity: 1, duration: .45, ease: 'power3.out'

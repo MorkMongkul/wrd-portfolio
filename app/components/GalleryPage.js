@@ -8,7 +8,7 @@ import Lightbox from './Lightbox'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
-export default function GalleryPage({ photos, seriesList, heroImage, initialSeriesId, onClearInitialSeries, aboutData }) {
+export default function GalleryPage({ seriesList, initialSeriesId, onClearInitialSeries, aboutData }) {
   const socialInstagram = aboutData?.instagramUrl || 'https://instagram.com'
   const socialFacebook  = aboutData?.facebookUrl  || 'https://facebook.com'
   const socialLinkedin  = aboutData?.linkedinUrl  || 'https://linkedin.com'
@@ -88,15 +88,8 @@ export default function GalleryPage({ photos, seriesList, heroImage, initialSeri
       { _id: 'rural', title: 'River People', location: 'Kampot', year: '2023', camera: 'Fujifilm X-T4', description: 'A quiet, deep-dive documentary following families who live and work along the Kampot river, tracing their ancient traditions.' },
       { _id: 'landscape', title: 'Temple Hours', location: 'Siem Reap', year: '2025', camera: 'Fujifilm X-T4', description: 'The timeless, spiritual ruins of Angkor, documented during early morning light and quiet, meditative hours.' },
       { _id: 'portraits', title: 'Highland Forest', location: 'Mondulkiri', year: '2024', camera: 'Fujifilm X-T4', description: 'Intimate portraits of indigenous communities and their profound connection to the dense highland forests of Mondulkiri.' },
-    ].map((fallback, idx) => {
-      const firstPhoto = photos.find(p => p.series === fallback._id || p.seriesId === fallback._id)
-      return {
-        ...fallback,
-        coverImage: firstPhoto ? firstPhoto.image : null,
-        order: idx + 1
-      }
-    })
-  }, [seriesList, photos])
+    ].map((fallback, idx) => ({ ...fallback, coverImage: null, order: idx + 1 }))
+  }, [seriesList])
 
   // Handle auto-opening of a series when navigating from Featured page
   useEffect(() => {
@@ -120,15 +113,7 @@ export default function GalleryPage({ photos, seriesList, heroImage, initialSeri
 
   // Get active photos for the selected series
   const activePhotos = selectedSeries
-    ? (selectedSeries.photos && selectedSeries.photos.length > 0
-      ? selectedSeries.photos
-      : photos.filter(p => {
-        const sid = selectedSeries._id
-        if (sid === 'street' || sid === 'rural' || sid === 'landscape' || sid === 'portraits') {
-          return p.series === sid || p.seriesId === sid
-        }
-        return p.seriesId === sid || p.series?._id === sid
-      }))
+    ? (selectedSeries.photos || [])
     : []
 
   // ── Compile editorial blocks ──
@@ -166,12 +151,8 @@ export default function GalleryPage({ photos, seriesList, heroImage, initialSeri
       return
     }
 
-    const imgUrl = seriesItem.coverImage
-      ? urlFor(seriesItem.coverImage).width(1200).quality(85).url()
-      : (photos.find(p => p.series === seriesItem._id || p.seriesId === seriesItem._id)?.image
-        ? urlFor(photos.find(p => p.series === seriesItem._id || p.seriesId === seriesItem._id).image).width(1200).quality(85).url()
-        : '')
-    if (!imgUrl) return
+    if (!seriesItem.coverImage) return
+    const imgUrl = urlFor(seriesItem.coverImage).width(1200).quality(85).url()
 
     coverSeriesIdRef.current = seriesItem._id
     gsap.killTweensOf(coverPanelRef.current)
@@ -669,9 +650,7 @@ export default function GalleryPage({ photos, seriesList, heroImage, initialSeri
             {seriesToUse.map((series, i) => {
               const cover = series.coverImage
                 ? urlFor(series.coverImage).width(800).quality(85).url()
-                : (photos.find(p => p.series === series._id || p.seriesId === series._id)?.image
-                  ? urlFor(photos.find(p => p.series === series._id || p.seriesId === series._id).image).width(800).quality(85).url()
-                  : '')
+                : ''
 
               return (
                 <div

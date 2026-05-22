@@ -7,7 +7,7 @@ import { urlFor } from '@/sanity/lib/image'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
-export default function FeaturedPage({ photos, coverData, onDiscoverSeries }) {
+export default function FeaturedPage({ coverData, onDiscoverSeries }) {
   const containerRef = useRef(null)
   const slidesRef    = useRef([])
   const counterRef   = useRef(null)
@@ -54,26 +54,9 @@ export default function FeaturedPage({ photos, coverData, onDiscoverSeries }) {
           }
         })
       }
-    } else {
-      // Legacy fallback: display the individual featured photos
-      photos.forEach(photo => {
-        if (photo) {
-          list.push({
-            _id: photo._id,
-            isHero: false,
-            isLegacy: true,
-            image: photo.image,
-            title: photo.title || 'Untitled',
-            location: photo.location || '',
-            year: photo.date || '',
-            series: photo.series || '',
-            writeup: photo.writeup || ''
-          })
-        }
-      })
     }
     return list
-  }, [photos, coverData])
+  }, [coverData])
 
   const TOTAL = slides.length
 

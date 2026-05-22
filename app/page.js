@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { client } from '@/sanity/lib/client'
-import { featuredPhotosQuery, allPhotosQuery, galleryHeroQuery, aboutPageQuery } from '@/sanity/lib/queries'
+import { featuredPhotosQuery, allPhotosQuery, allSeriesQuery, galleryHeroQuery, aboutPageQuery, featurePageCoverQuery } from '@/sanity/lib/queries'
 import dynamic from 'next/dynamic'
 import Nav from './components/Nav'
 import Cursor from './components/Cursor'
@@ -16,8 +16,11 @@ export default function Home() {
   const [switching, setSwitching]     = useState(false)
   const [featuredPhotos, setFeatured] = useState([])
   const [allPhotos, setAllPhotos]     = useState([])
+  const [allSeries, setAllSeries]     = useState([])
   const [galleryHeroImage, setGalleryHeroImage] = useState(null)
-  const [aboutImages, setAboutImages] = useState({ heroImage: null, collageImages: [] })
+  const [aboutData, setAboutData] = useState(null)
+  const [featureCoverData, setFeatureCoverData] = useState(null)
+  const [initialSeriesId, setInitialSeriesId] = useState(null)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [introDone, setIntroDone] = useState(false)
   const [pageEntered, setPageEntered] = useState(false)
@@ -107,21 +110,22 @@ export default function Home() {
     let mounted = true
 
     async function fetchPhotos() {
-      const [featured, all, settings, about] = await Promise.all([
+      const [featured, all, series, settings, about, featureCover] = await Promise.all([
         client.fetch(featuredPhotosQuery),
         client.fetch(allPhotosQuery),
+        client.fetch(allSeriesQuery),
         client.fetch(galleryHeroQuery),
-        client.fetch(aboutPageQuery)
+        client.fetch(aboutPageQuery),
+        client.fetch(featurePageCoverQuery)
       ])
 
       if (!mounted) return
       setFeatured(featured)
       setAllPhotos(all)
+      setAllSeries(series)
       setGalleryHeroImage(settings?.galleryHeroImage || null)
-      setAboutImages({
-        heroImage: about?.heroImage || null,
-        collageImages: about?.collageImages || []
-      })
+      setAboutData(about || null)
+      setFeatureCoverData(featureCover)
       setDataLoaded(true)
     }
 
@@ -172,7 +176,7 @@ export default function Home() {
           textAnchor="middle"
           fontFamily="'Inter', sans-serif"
           fontSize="72"
-          fontWeight="700"
+          fontWeight="800"
           letterSpacing="8"
           fill="none"
           stroke="var(--text)"
@@ -206,18 +210,30 @@ export default function Home() {
           key={activePage}
           className={pageEntered ? 'page-clip page-clip--in' : 'page-clip'}
         >
-          {activePage === 'featured' && <FeaturedPage photos={featuredPhotos} />}
+          {activePage === 'featured' && (
+            <FeaturedPage
+              photos={featuredPhotos}
+              coverData={featureCoverData}
+              onDiscoverSeries={(seriesId) => {
+                setInitialSeriesId(seriesId)
+                navigate('gallery')
+              }}
+            />
+          )}
           {activePage === 'gallery'  && (
             <GalleryPage
               photos={allPhotos}
+              seriesList={allSeries}
               heroImage={galleryHeroImage}
+              initialSeriesId={initialSeriesId}
+              onClearInitialSeries={() => setInitialSeriesId(null)}
+              aboutData={aboutData}
             />
           )}
           {activePage === 'about'    && (
             <AboutPage
               onNavigate={navigate}
-              heroImage={aboutImages.heroImage}
-              collageImages={aboutImages.collageImages}
+              aboutData={aboutData}
             />
           )}
         </div>

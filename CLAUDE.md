@@ -50,7 +50,7 @@ A personal photography portfolio for WRD Photography, based in Phnom Penh, Cambo
 | `sanity/lib/image.js` | `urlFor()` image URL builder |
 | `sanity/schemaTypes/photo.js` | Photo schema: title, image, location, series, featured, date, writeup, order |
 | `sanity/schemaTypes/siteSettings.js` | Gallery hero image schema |
-| `sanity/schemaTypes/aboutPage.js` | About page hero + collage images schema |
+| `sanity/schemaTypes/aboutPage.js` | About page hero + custom fields (heading, bio, contact, socials) schema |
 
 ---
 
@@ -92,7 +92,7 @@ Fields: `title` (required), `image` (required, hotspot), `location`, `series` (s
 Fields: `title`, `description`, `credit`, `location`, `galleryHeroImage`
 
 ### `aboutPage` document
-Fields: `heroImage`, `collageImages[]`
+Fields: `heroImage`, `heading` (array), `bio`, `ctaTitle`, `ctaDescription`, `email`, `phone`, `instagramUrl`, `facebookUrl`, `linkedinUrl`, `telegramUrl`
 
 ---
 
@@ -101,8 +101,6 @@ Fields: `heroImage`, `collageImages[]`
 | Severity | Issue |
 |---|---|
 | MEDIUM | Hard-coded Unsplash fallback URLs in `AboutPage.js:187-189` — should use local or Sanity assets |
-| MEDIUM | Email `hello@wrdphoto.com` hard-coded in `AboutPage.js:392` — should come from Sanity |
-| MEDIUM | Social links in About footer are `href="#"` — not wired to real URLs |
 | MEDIUM | `landscape` filter in `GalleryPage.js:45-49` has no branch — falls through to `all` |
 | LOW | Duplicate `onMouseEnter` on `← Prev` button in `Lightbox.js:243` — second handler wins |
 | LOW | Portraits section labeled `03` in `GalleryPage.js:630` — same number as Landscape |

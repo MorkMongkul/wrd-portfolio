@@ -4,13 +4,6 @@ export const structure = (S) =>
     .title('Content')
     .items([
       S.listItem()
-        .title('GalleryHeroPhoto')
-        .child(
-          S.document()
-            .schemaType('galleryHeroPhoto')
-            .documentId('galleryHeroPhoto')
-        ),
-      S.listItem()
         .title('About Page')
         .child(
           S.document()
@@ -19,6 +12,6 @@ export const structure = (S) =>
         ),
       S.divider(),
       ...S.documentTypeListItems().filter(
-        (item) => item.getId() !== 'galleryHeroPhoto' && item.getId() !== 'aboutPage'
+        (item) => item.getId() !== 'aboutPage'
       )
     ])

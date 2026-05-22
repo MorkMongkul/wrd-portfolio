@@ -1,36 +1,5 @@
 import { groq } from 'next-sanity'
 
-export const featuredPhotosQuery = groq`
-  *[_type == "photo" && featured == true] | order(order asc, date desc) {
-    _id, title, location,
-    "camera": coalesce(select(cameraSelect == "other" => cameraCustom, cameraSelect), camera),
-    date, writeup, layout,
-    "series": coalesce(series->title, series),
-    series-> {
-      _id, title, slug, description, location, year,
-      "camera": coalesce(select(cameraSelect == "other" => cameraCustom, cameraSelect), camera),
-      coverImage { asset->{ _id, url }, hotspot }
-    },
-    image { asset->{ _id, url }, hotspot }
-  }
-`
-
-export const allPhotosQuery = groq`
-  *[_type == "photo"] | order(order asc, date desc) {
-    _id, title, location,
-    "camera": coalesce(select(cameraSelect == "other" => cameraCustom, cameraSelect), camera),
-    date, writeup, layout,
-    "series": coalesce(series->title, series),
-    "seriesId": series->_id,
-    series-> {
-      _id, title, slug, description, location, year,
-      "camera": coalesce(select(cameraSelect == "other" => cameraCustom, cameraSelect), camera),
-      coverImage { asset->{ _id, url }, hotspot }
-    },
-    image { asset->{ _id, url }, hotspot }
-  }
-`
-
 export const allSeriesQuery = groq`
   *[_type == "series"] | order(order asc, title asc) {
     _id, title, slug, description, location, year,
@@ -50,15 +19,6 @@ export const allSeriesQuery = groq`
   }
 `
 
-export const galleryHeroQuery = groq`
-  *[_type == "galleryHeroPhoto"][0] {
-    title,
-    description,
-    credit,
-    location,
-    galleryHeroImage { asset->{ _id, url }, hotspot }
-  }
-`
 
 export const aboutPageQuery = groq`
   *[_type == "aboutPage"][0] {

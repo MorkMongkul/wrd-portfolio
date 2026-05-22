@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { client } from '@/sanity/lib/client'
-import { featuredPhotosQuery, allPhotosQuery, allSeriesQuery, galleryHeroQuery, aboutPageQuery, featurePageCoverQuery } from '@/sanity/lib/queries'
+import { allSeriesQuery, aboutPageQuery, featurePageCoverQuery } from '@/sanity/lib/queries'
 import dynamic from 'next/dynamic'
 import Nav from './components/Nav'
 import Cursor from './components/Cursor'
@@ -14,10 +14,7 @@ const AboutPage    = dynamic(() => import('./components/AboutPage'),    { ssr: f
 export default function Home() {
   const [activePage, setActivePage]   = useState('featured')
   const [switching, setSwitching]     = useState(false)
-  const [featuredPhotos, setFeatured] = useState([])
-  const [allPhotos, setAllPhotos]     = useState([])
   const [allSeries, setAllSeries]     = useState([])
-  const [galleryHeroImage, setGalleryHeroImage] = useState(null)
   const [aboutData, setAboutData] = useState(null)
   const [featureCoverData, setFeatureCoverData] = useState(null)
   const [initialSeriesId, setInitialSeriesId] = useState(null)
@@ -110,20 +107,14 @@ export default function Home() {
     let mounted = true
 
     async function fetchPhotos() {
-      const [featured, all, series, settings, about, featureCover] = await Promise.all([
-        client.fetch(featuredPhotosQuery),
-        client.fetch(allPhotosQuery),
+      const [series, about, featureCover] = await Promise.all([
         client.fetch(allSeriesQuery),
-        client.fetch(galleryHeroQuery),
         client.fetch(aboutPageQuery),
         client.fetch(featurePageCoverQuery)
       ])
 
       if (!mounted) return
-      setFeatured(featured)
-      setAllPhotos(all)
       setAllSeries(series)
-      setGalleryHeroImage(settings?.galleryHeroImage || null)
       setAboutData(about || null)
       setFeatureCoverData(featureCover)
       setDataLoaded(true)
@@ -212,7 +203,6 @@ export default function Home() {
         >
           {activePage === 'featured' && (
             <FeaturedPage
-              photos={featuredPhotos}
               coverData={featureCoverData}
               onDiscoverSeries={(seriesId) => {
                 setInitialSeriesId(seriesId)
@@ -222,9 +212,7 @@ export default function Home() {
           )}
           {activePage === 'gallery'  && (
             <GalleryPage
-              photos={allPhotos}
               seriesList={allSeries}
-              heroImage={galleryHeroImage}
               initialSeriesId={initialSeriesId}
               onClearInitialSeries={() => setInitialSeriesId(null)}
               aboutData={aboutData}

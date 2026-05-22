@@ -1,26 +1,23 @@
-import { JetBrains_Mono, Libre_Caslon_Display, Manrope } from 'next/font/google'
+import { Outfit, Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
-const manrope = Manrope({
+const outfit = Outfit({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-manrope',
-  display: 'swap',
+  weight: ['200', '300', '400', '500'],
+  variable: '--font-outfit',
 })
 
-const caslon = Libre_Caslon_Display({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-caslon-display',
-  display: 'swap',
+  weight: ['300', '400', '500'],
+  variable: '--font-inter',
 })
 
-const jetbrains = JetBrains_Mono({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-jetbrains-mono',
+  weight: ['200', '300', '400', '500', '700', '800'],
   style: ['normal', 'italic'],
-  display: 'swap',
+  variable: '--font-jakarta',
 })
 
 export const metadata = {
@@ -31,7 +28,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${caslon.variable} ${jetbrains.variable}`}>
+      <body className={`${outfit.variable} ${inter.variable} ${plusJakarta.variable}`}>
         {children}
       </body>
     </html>

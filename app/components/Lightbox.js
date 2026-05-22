@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { urlFor } from '@/sanity/lib/image'
 
 export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
@@ -218,6 +218,19 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
                 }}>{photo.location}</span>
               </div>
             )}
+            {photo.camera && (
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '11px',
+                  letterSpacing: '2px', textTransform: 'uppercase',
+                  color: 'var(--text-faint)', minWidth: '6rem'
+                }}>Camera</span>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '12px',
+                  color: 'var(--text-muted)', letterSpacing: '0.5px'
+                }}>{photo.camera}</span>
+              </div>
+            )}
             {photo.date && (
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <span style={{
@@ -240,16 +253,6 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
             <button
               className="lb-nav-btn"
               onClick={onPrev}
-              onMouseEnter={e => {
-                gsapRef.current?.to(e.currentTarget, {
-                  x: -4, duration: .2, ease: 'power2.out'
-                })
-              }}
-              onMouseLeave={e => {
-                gsapRef.current?.to(e.currentTarget, {
-                  x: 0, duration: .2, ease: 'power2.out'
-                })
-              }}
               style={{
                 fontFamily: 'var(--font-mono)', fontSize: '12px',
                 letterSpacing: '2px', textTransform: 'uppercase',

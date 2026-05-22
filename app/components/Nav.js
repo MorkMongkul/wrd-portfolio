@@ -1,74 +1,8 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function Nav({ activePage, onNavigate }) {
-  const navRef    = useRef(null)
-  const gsapRef   = useRef(null)
-  const hiddenRef = useRef(false)
   const [theme, setTheme] = useState('dark')
-
-  useEffect(() => {
-    import('gsap').then(({ gsap }) => {
-      gsapRef.current = gsap
-
-      gsap.fromTo(navRef.current,
-        { y: -80, opacity: 0 },
-        { y: 0, opacity: 1, duration: .9, ease: 'power3.out', delay: .5 }
-      )
-
-      setTimeout(() => {
-        gsap.to(navRef.current, {
-          y: -80, opacity: 0, duration: .5, ease: 'power2.in'
-        })
-        hiddenRef.current = true
-      }, 2500)
-    })
-
-    function onMouseMove(e) {
-      const gsap = gsapRef.current
-      if (!gsap || !navRef.current) return
-
-      // don't show nav when lightbox is open
-      if (document.querySelector('[data-lightbox]')) return
-
-      if (e.clientY < 80 && hiddenRef.current) {
-        gsap.to(navRef.current, {
-          y: 0, opacity: 1, duration: .45, ease: 'power3.out'
-        })
-        hiddenRef.current = false
-      }
-
-      if (e.clientY > 120 && !hiddenRef.current) {
-        gsap.to(navRef.current, {
-          y: -80, opacity: 0, duration: .4, ease: 'power2.in'
-        })
-        hiddenRef.current = true
-      }
-    }
-
-    // everything inside useEffect — no window error
-    window.addEventListener('mousemove', onMouseMove)
-    return () => window.removeEventListener('mousemove', onMouseMove)
-  }, [])
-
-  useEffect(() => {
-    const gsap = gsapRef.current
-    if (!gsap || !navRef.current) return
-
-    gsap.to(navRef.current, {
-      y: 0, opacity: 1, duration: .45, ease: 'power3.out'
-    })
-    hiddenRef.current = false
-
-    const timer = setTimeout(() => {
-      gsap.to(navRef.current, {
-        y: -80, opacity: 0, duration: .5, ease: 'power2.in'
-      })
-      hiddenRef.current = true
-    }, 2500)
-
-    return () => clearTimeout(timer)
-  }, [activePage])
 
   useEffect(() => {
     const stored = window.localStorage.getItem('wrd-theme')
@@ -93,27 +27,49 @@ export default function Nav({ activePage, onNavigate }) {
 
   return (
     <>
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0,
-        height: '8px', zIndex: 10000, background: 'transparent',
-      }}/>
-      <nav ref={navRef} style={{
+      <style>{`
+        @media (max-width: 640px) {
+          .nav-wordmark-full  { display: none !important; }
+          .nav-wordmark-short { display: inline !important; }
+        }
+        @media (min-width: 641px) {
+          .nav-wordmark-short { display: none; }
+        }
+      `}</style>
+
+      <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
         height: '64px', display: 'flex',
         alignItems: 'center', justifyContent: 'space-between',
         padding: '0 40px', backgroundColor: 'var(--dark)',
         borderBottom: '1px solid var(--border)',
-        willChange: 'transform',
       }}>
-        <button onClick={() => onNavigate('featured')} style={{
-          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-          color: 'var(--text)', fontFamily: 'var(--font-sans)',
-          fontSize: '15px', fontWeight: 600, letterSpacing: '2px',
-          textTransform: 'uppercase', WebkitFontSmoothing: 'antialiased',
-        }}>
-          <span style={{ color: 'var(--accent)' }}>WRD</span> Photography
+
+        {/* ── Typographic wordmark ── */}
+        <button
+          onClick={() => onNavigate('featured')}
+          style={{
+            background: 'none', border: 'none', padding: 0,
+            cursor: 'pointer', flex: 1, textAlign: 'left',
+          }}
+        >
+          <span className="nav-wordmark-full" style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.1rem', fontWeight: 500,
+            letterSpacing: '0.38em', textTransform: 'uppercase',
+            color: 'var(--text)',
+          }}>WRD Photography</span>
+
+          <span className="nav-wordmark-short" style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.1rem', fontWeight: 500,
+            letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: 'var(--text)',
+            display: 'none',
+          }}>WRD</span>
         </button>
 
+        {/* ── Links + theme toggle ── */}
         <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
           {links.map(link => (
             <button key={link.id} onClick={() => onNavigate(link.id)} style={{
@@ -133,6 +89,7 @@ export default function Nav({ activePage, onNavigate }) {
               }}
             >{link.label}</button>
           ))}
+
           <button
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

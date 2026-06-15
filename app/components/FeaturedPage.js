@@ -195,6 +195,67 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
 
   return (
     <div ref={containerRef} className="page-scroll" style={{ background: 'var(--dark)' }}>
+      <style>{`
+        .slider-hint {
+          position: absolute; bottom: 3.5rem; left: 4rem; z-index: 10;
+        }
+        .slider-counter {
+          position: absolute; bottom: 3.5rem; right: 4rem;
+          display: flex; align-items: center; gap: 1.2rem; z-index: 10;
+        }
+        .slider-dots {
+          position: absolute; left: 50%; bottom: 3.5rem;
+          transform: translateX(-50%); z-index: 10;
+          display: flex; gap: .8rem; align-items: center;
+        }
+        @media (max-width: 640px) {
+          .slider-hint {
+            display: none !important;
+          }
+          .slider-counter {
+            right: 1.5rem !important;
+            bottom: 2.2rem !important;
+          }
+          .slider-dots {
+            bottom: 2.4rem !important;
+          }
+          .discover-btn {
+            padding: 0.65rem 1.6rem !important;
+            font-size: 0.7rem !important;
+            letter-spacing: 0.15em !important;
+          }
+          /* Adjust title font tracking/margins on mobile */
+          .hero-title, .series-title {
+            margin-bottom: 0.8rem !important;
+          }
+        }
+        @media (min-width: 1440px) {
+          .slider-hint {
+            left: 6rem !important;
+            bottom: 5rem !important;
+          }
+          .slider-counter {
+            right: 6rem !important;
+            bottom: 5rem !important;
+          }
+          .slider-dots {
+            bottom: 5rem !important;
+          }
+        }
+        @media (min-width: 1920px) {
+          .slider-hint {
+            left: 8rem !important;
+            bottom: 6rem !important;
+          }
+          .slider-counter {
+            right: 8rem !important;
+            bottom: 6rem !important;
+          }
+          .slider-dots {
+            bottom: 6rem !important;
+          }
+        }
+      `}</style>
       <div className="slides-wrapper" style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
         {slides.map((slide, idx) => (
           <div
@@ -229,7 +290,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
               }}>
                 <h1 className="hero-title" style={{
                   fontFamily: 'var(--font-garamond)',
-                  fontSize: 'clamp(2.5rem, 6.5vw, 4.8rem)',
+                  fontSize: 'clamp(2.0rem, 6.5vw, 4.2rem)',
                   fontWeight: 300,
                   lineHeight: 1.05,
                   letterSpacing: '-.02em',
@@ -243,7 +304,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
                 {slide.subtitle && (
                   <p className="fade-text" style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 'clamp(0.75rem, 1.5vw, 0.95rem)',
+                    fontSize: 'clamp(0.8rem, 1.5vw, 0.95rem)',
                     fontWeight: 300,
                     lineHeight: 1.6,
                     color: 'var(--text-on-image-muted)',
@@ -266,7 +327,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
               }}>
                 <h2 className="series-title" style={{
                   fontFamily: 'var(--font-garamond)',
-                  fontSize: 'clamp(2.2rem, 5.5vw, 4.0rem)',
+                  fontSize: 'clamp(1.8rem, 5.5vw, 3.6rem)',
                   fontWeight: 300,
                   lineHeight: 1.1,
                   letterSpacing: '-.02em',
@@ -281,7 +342,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
                 {slide.subtitle && (
                   <div className="fade-text" style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 'clamp(0.75rem, 1.3vw, 0.85rem)',
+                    fontSize: 'clamp(0.8rem, 1.3vw, 0.85rem)',
                     fontWeight: 300,
                     lineHeight: 1.6,
                     color: 'var(--text-on-image-muted)',
@@ -382,10 +443,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
 
         {/* Counter */}
         {TOTAL >= 2 && (
-          <div style={{
-            position: 'absolute', bottom: '3.5rem', right: '4rem',
-            display: 'flex', alignItems: 'center', gap: '1.2rem', zIndex: 10
-          }}>
+          <div className="slider-counter">
             <div style={{ height: '1.4rem', overflow: 'hidden',
               fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--text-on-image)'
             }}>
@@ -406,11 +464,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
 
         {/* Dots */}
         {TOTAL >= 2 && (
-          <div style={{
-            position: 'absolute', left: '50%', bottom: '3.5rem',
-            transform: 'translateX(-50%)', zIndex: 10,
-            display: 'flex', gap: '.8rem', alignItems: 'center'
-          }}>
+          <div className="slider-dots">
             {slides.map((_, i) => (
               <div key={i} className="dot" style={{
                 width: 4, height: 4, borderRadius: '50%',
@@ -424,8 +478,7 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
 
         {/* Hint */}
         {TOTAL >= 2 && (
-          <div style={{
-            position: 'absolute', bottom: '3.5rem', left: '4rem', zIndex: 10,
+          <div className="slider-hint" style={{
             fontFamily: 'var(--font-mono)', fontSize: '.7rem',
             letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--muted-on-image)'
           }}>

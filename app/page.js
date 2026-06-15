@@ -163,20 +163,20 @@ export default function Home() {
         <text
           ref={introTitleRef}
           x="500"
-          y="95"
+          y="92"
           textAnchor="middle"
-          fontFamily="'Inter', sans-serif"
-          fontSize="72"
-          fontWeight="800"
-          letterSpacing="8"
+          fontSize="64"
+          fontWeight="300"
           fill="none"
           stroke="var(--text)"
-          strokeWidth="1.5"
-
-          // CRITICAL SMOOTHING FIX
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="1.2"
           shapeRendering="geometricPrecision"
+          style={{
+            fontFamily: 'var(--font-garamond), serif',
+            letterSpacing: '0.24em',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round'
+          }}
         >
           WRD PHOTOGRAPHY
         </text>

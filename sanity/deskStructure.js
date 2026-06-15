@@ -4,14 +4,20 @@ export const structure = (S) =>
     .title('Content')
     .items([
       S.listItem()
-        .title('About Page')
+        .title('About Page Settings')
         .child(
           S.document()
             .schemaType('aboutPage')
             .documentId('aboutPage')
         ),
+      S.listItem()
+        .title('Home Featured Settings')
+        .child(
+          S.document()
+            .schemaType('featurePageCover')
+            .documentId('featurePageCover')
+        ),
       S.divider(),
-      ...S.documentTypeListItems().filter(
-        (item) => item.getId() !== 'aboutPage'
-      )
+      S.documentTypeListItem('collection').title('Collections'),
+      S.documentTypeListItem('series').title('Gallery Series'),
     ])

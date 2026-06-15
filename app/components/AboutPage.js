@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import { urlFor } from '@/sanity/lib/image'
+import { splitLuxuryTitle } from './LuxuryTitle'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
@@ -64,16 +65,7 @@ export default function AboutPage({ onNavigate, aboutData }) {
   }
 
   // Helper to split title into words nested in hidden containers for slide-up reveal
-  const splitTitle = (titleText) => {
-    if (!titleText) return null
-    return titleText.split(' ').map((word, index) => (
-      <span key={index} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom', marginRight: '0.3em', lineHeight: '1.15', paddingBottom: '0.25em', marginBottom: '-0.25em' }}>
-        <span className="cta-word" style={{ display: 'inline-block', transform: 'translateY(110%)', willChange: 'transform' }}>
-          {word}
-        </span>
-      </span>
-    ))
-  }
+  const splitTitle = (titleText) => splitLuxuryTitle(titleText, 'cta-word')
 
   useGSAP(() => {
     const scroller = containerRef.current
@@ -219,7 +211,7 @@ export default function AboutPage({ onNavigate, aboutData }) {
                 marginBottom: '-0.25em'
               }}>
                 <div className="hero-line-inner" style={{
-                  fontFamily: 'var(--font-display)', fontWeight: 800,
+                  fontFamily: 'var(--font-garamond)', fontWeight: 300,
                   fontSize: 'clamp(2.8rem, 4.5vw, 4.2rem)', letterSpacing: '-.02em',
                   color: 'var(--cream)', display: 'block',
                   transform: 'translateY(110%)', willChange: 'transform'
@@ -382,8 +374,8 @@ export default function AboutPage({ onNavigate, aboutData }) {
         flexWrap: 'wrap', gap: '1.5rem'
       }}>
         <div style={{
-          fontFamily: 'var(--font-mono)', fontSize: '1rem',
-          letterSpacing: '.2em', color: 'var(--cream)'
+          fontFamily: 'var(--font-garamond)', fontSize: '1.1rem', fontWeight: 300,
+          letterSpacing: '.18em', color: 'var(--cream)'
         }}>WRD Photography</div>
 
         {/* Centered Social links */}
@@ -464,7 +456,8 @@ export default function AboutPage({ onNavigate, aboutData }) {
         </div>
 
         <div style={{
-          fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--muted)'
+          fontFamily: 'var(--font-garamond)', fontSize: '13px', fontWeight: 300,
+          letterSpacing: '0.05em', color: 'var(--muted)'
         }}>© 2026 — All rights reserved</div>
       </div>
 

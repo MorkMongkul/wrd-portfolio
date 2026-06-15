@@ -30,11 +30,11 @@ export default {
       description: 'The smaller sub-heading text displayed below the main title.'
     },
     {
-      name: 'featuredSeries',
-      title: 'Featured Series Collection',
+      name: 'featuredCollections',
+      title: 'Featured Collections',
       type: 'array',
-      of: [{ type: 'reference', to: [{ type: 'series' }] }],
-      description: 'The collection of main series/projects to display as full-screen scrolls at the bottom.'
+      of: [{ type: 'reference', to: [{ type: 'collection' }] }],
+      description: 'The collections to display as full-screen slides on the homepage.'
     }
   ],
   preview: {

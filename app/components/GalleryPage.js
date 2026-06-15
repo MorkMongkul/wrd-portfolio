@@ -1,10 +1,11 @@
 'use client'
-import { useRef, useState, useEffect, useMemo } from 'react'
+import React, { useRef, useState, useEffect, useMemo } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import { urlFor } from '@/sanity/lib/image'
 import Lightbox from './Lightbox'
+import LuxuryTitle, { splitLuxuryTitle } from './LuxuryTitle'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
@@ -14,14 +15,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
   const socialLinkedin  = aboutData?.linkedinUrl  || 'https://linkedin.com'
   const socialTelegram  = aboutData?.telegramUrl  || 'https://t.me'
   const containerRef = useRef(null)
-  const coverPanelRef = useRef(null)
-  const coverImgRef = useRef(null)
-  const coverSeriesIdRef = useRef(null)   // tracks which series is currently shown in the hover panel
-  const gridSectionRef = useRef(null)
-  const gridTrackRef = useRef(null)
-  const gridScrollTriggerRef = useRef(null)
   const editorialTriggersRef = useRef([]) // ScrollTrigger instances from editorial useEffect
-  const listAnimatedRef = useRef(false)  // prevents list rows from re-animating on every view-mode toggle
 
   // Word-by-word reveal — same pattern as AboutPage biography/CTA
   const splitWords = (text) => {
@@ -39,31 +33,12 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
     })
   }
 
-  const handleViewModeChange = (newMode) => {
-    // Kill (not revert) the pin trigger so no orphaned spacer is left in the DOM.
-    // revertOnUpdate:true on useGSAP handles full GSAP context cleanup on re-run.
-    if (gridScrollTriggerRef.current) {
-      gridScrollTriggerRef.current.kill()
-      gridScrollTriggerRef.current = null
-    }
-    setViewMode(newMode)
-  }
-
-
   // Helper to split string into individual words for About Page line-by-line reveal
-  const splitTitle = (titleText) => {
-    if (!titleText) return null
-    return titleText.split(' ').map((word, index) => (
-      <span key={index} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom', marginRight: '0.3em', lineHeight: '1.15' }}>
-        <span className="title-line-inner" style={{ display: 'inline-block', transform: 'translateY(110%)', willChange: 'transform' }}>
-          {word}
-        </span>
-      </span>
-    ))
-  }
+  const splitTitle = (titleText) => splitLuxuryTitle(titleText, 'title-line-inner')
 
-  const [viewMode, setViewMode] = useState('list')
   const [selectedSeries, setSelectedSeries] = useState(null)
+  const [selectedCollection, setSelectedCollection] = useState(null)
+  const [visibleCollectionsCount, setVisibleCollectionsCount] = useState(3)
   const [renderDetailContent, setRenderDetailContent] = useState(false)
   const [hoveredCard, setHoveredCard] = useState(null)
   const [lightboxPhoto, setLightboxPhoto] = useState(null)
@@ -91,7 +66,56 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
     ].map((fallback, idx) => ({ ...fallback, coverImage: null, order: idx + 1 }))
   }, [seriesList])
 
-  // Handle auto-opening of a series when navigating from Featured page
+  const groupedCollections = useMemo(() => {
+    const groups = {}
+    const standalone = []
+
+    seriesToUse.forEach((s) => {
+      if (s.collection && s.collection._id) {
+        const cId = s.collection._id
+        if (!groups[cId]) {
+          groups[cId] = {
+            collection: s.collection,
+            series: []
+          }
+        }
+        groups[cId].series.push(s)
+      } else {
+        standalone.push(s)
+      }
+    })
+
+    // Sort series inside each collection by order/title
+    Object.values(groups).forEach(g => {
+      g.series.sort((a, b) => (a.order || 10) - (b.order || 10))
+    })
+
+    // Sort collections by their own order
+    const sortedGroups = Object.values(groups).sort((a, b) => (a.collection.order || 10) - (b.collection.order || 10))
+
+    return {
+      groups: sortedGroups,
+      standalone
+    }
+  }, [seriesToUse])
+
+  const allDirectoryItems = useMemo(() => {
+    const items = [...groupedCollections.groups]
+    if (groupedCollections.standalone.length > 0) {
+      items.push({
+        isStandalone: true,
+        collection: {
+          _id: 'standalone',
+          title: 'Standalone Projects',
+          description: 'Independent captures and archives.'
+        },
+        series: groupedCollections.standalone
+      })
+    }
+    return items
+  }, [groupedCollections])
+
+  // Handle auto-opening of a series or auto-focusing of a collection when navigating from Featured page
   useEffect(() => {
     if (initialSeriesId) {
       const found = seriesToUse.find(s => s._id === initialSeriesId)
@@ -99,17 +123,55 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         setTimeout(() => {
           setRenderDetailContent(false)
           setSelectedSeries(found)
+          // Set parent collection active as well
+          const foundGroup = groupedCollections.groups.find(g => g.series.some(s => s._id === found._id))
+          if (foundGroup) {
+            setSelectedCollection(foundGroup)
+          } else if (groupedCollections.standalone.some(s => s._id === found._id)) {
+            setSelectedCollection({
+              collection: { _id: 'standalone', title: 'Standalone Projects', description: 'Independent captures and archives.' },
+              series: groupedCollections.standalone
+            })
+          }
         }, 0)
         window.scrollTo({ top: 0, behavior: 'instant' })
+      } else {
+        // Find collection and open it
+        const groupFound = groupedCollections.groups.find(g => g.collection._id === initialSeriesId)
+        if (groupFound) {
+          setSelectedCollection(groupFound)
+        } else if (initialSeriesId === 'standalone') {
+          setSelectedCollection({
+            collection: { _id: 'standalone', title: 'Standalone Projects', description: 'Independent captures and archives.' },
+            series: groupedCollections.standalone
+          })
+        }
+        setTimeout(() => {
+          const scroller = containerRef.current
+          if (scroller) {
+            scroller.scrollTo({ top: 0, behavior: 'smooth' })
+          }
+        }, 100)
       }
       if (onClearInitialSeries) {
         onClearInitialSeries()
       }
     }
-  }, [initialSeriesId, seriesToUse, onClearInitialSeries])
+  }, [initialSeriesId, seriesToUse, onClearInitialSeries, groupedCollections])
 
   // Format index helpers
   const fmt = n => n < 10 ? `0${n}` : `${n}`
+
+  const getBentoClass = (index) => {
+    const pattern = index % 5
+    if (pattern === 0 || pattern === 4) {
+      return 'bento-card-wide'
+    } else if (pattern === 1) {
+      return 'bento-card-tall'
+    } else {
+      return 'bento-card-square'
+    }
+  }
 
   // Get active photos for the selected series
   const activePhotos = selectedSeries
@@ -117,7 +179,6 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
     : []
 
   // ── Compile editorial blocks ──
-  // Consecutive photos marked with 'masonry' layout are grouped into a single block
   const editorialBlocks = []
   let masonryTemp = []
 
@@ -140,63 +201,8 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
     editorialBlocks.push({ type: 'masonry', photos: masonryTemp })
   }
 
-  // ── GSAP hover cover photo reveal ──
-  function showCover(seriesItem) {
-    if (!coverImgRef.current || !coverPanelRef.current) return
-
-    // If already showing this series, just ensure the panel is open — no src swap needed
-    if (coverSeriesIdRef.current === seriesItem._id) {
-      gsap.killTweensOf(coverPanelRef.current)
-      gsap.to(coverPanelRef.current, { clipPath: 'inset(0 0% 0 0)', duration: 0.55, ease: 'power4.out' })
-      return
-    }
-
-    if (!seriesItem.coverImage) return
-    const imgUrl = urlFor(seriesItem.coverImage).width(1200).quality(85).url()
-
-    coverSeriesIdRef.current = seriesItem._id
-    gsap.killTweensOf(coverPanelRef.current)
-
-    // Close panel first → swap src when fully hidden → re-open.
-    // This prevents the old image from being visible mid-reveal when switching rows quickly.
-    gsap.to(coverPanelRef.current, {
-      clipPath: 'inset(0 100% 0 0)',
-      duration: 0.12,
-      ease: 'none',
-      onComplete: () => {
-        if (!coverImgRef.current) return
-        coverImgRef.current.src = imgUrl
-        gsap.to(coverPanelRef.current, { clipPath: 'inset(0 0% 0 0)', duration: 0.55, ease: 'power4.out' })
-      }
-    })
-  }
-
-  function hideCover() {
-    coverSeriesIdRef.current = null
-    if (!coverPanelRef.current) return
-    gsap.killTweensOf(coverPanelRef.current)
-    gsap.to(coverPanelRef.current, { clipPath: 'inset(0 100% 0 0)', duration: 0.4, ease: 'power3.in' })
-  }
-
-  function onRowEnter(e, seriesItem) {
-    const arrow = e.currentTarget.querySelector('.series-arrow')
-    if (arrow) gsap.to(arrow, { x: 10, duration: 0.3, ease: 'power2.out' })
-    showCover(seriesItem)
-  }
-
-  function onRowLeave(e) {
-    const arrow = e.currentTarget.querySelector('.series-arrow')
-    if (arrow) gsap.to(arrow, { x: 0, duration: 0.4, ease: 'power2.out' })
-    hideCover()
-  }
-
   // Open a series directly with instant view swap + zoom reveal
   function openSeries(series) {
-    if (gridScrollTriggerRef.current) {
-      gridScrollTriggerRef.current.revert()
-      gridScrollTriggerRef.current.kill()
-      gridScrollTriggerRef.current = null
-    }
     if (containerRef.current) {
       containerRef.current.scrollTo({ top: 0, behavior: 'instant' })
     }
@@ -253,58 +259,35 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
       gsap.to(detailLines, { y: '0%', duration: 1.4, stagger: 0.1, ease: 'power4.out', delay: 0.1 })
       gsap.to(detailFadeTexts, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.4 })
 
-      // Editorial scroll animations are handled in a dedicated useEffect
-      // that runs after renderDetailContent becomes true and React mounts the content
-
     } else {
-      // ── LIST / GRID VIEW ENTRANCE ANIMATIONS ──
-
+      // ── GALLERY ENTRANCE & FILTERING ANIMATIONS ──
       timer = setTimeout(() => {
         context.add(() => {
-          // List view rows — only animate on first entry or after returning from a series detail.
-          // listAnimatedRef prevents them from re-animating every time you toggle List ↔ Grid.
-          if (viewMode === 'list' && !listAnimatedRef.current) {
-            listAnimatedRef.current = true
-            gsap.utils.toArray('.list-series-row').forEach((row, i) => {
-              gsap.fromTo(row,
-                { opacity: 0, y: 24 },
-                { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', delay: 0.1 + i * 0.07 }
+          // If no collection selected, animate directory cards
+          if (!selectedCollection) {
+            const dirCards = gsap.utils.toArray('.collection-directory-card')
+            if (dirCards.length) {
+              gsap.fromTo(dirCards,
+                { opacity: 0, y: 30 },
+                { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.08, overwrite: 'auto' }
               )
-            })
-          }
-
-          // Grid view horizontal scroll trigger
-          if (viewMode === 'grid') {
-            const track = gridTrackRef.current
-            const section = gridSectionRef.current
-            if (track && section) {
-              const scrollVal = Math.max(0, track.scrollWidth - section.offsetWidth)
-              if (scrollVal > 0) {
-                const tween = gsap.to(track, {
-                  x: -scrollVal,
-                  ease: 'none',
-                  scrollTrigger: {
-                    trigger: section,
-                    scroller: scroller,
-                    pin: true,
-                    pinSpacing: true,
-                    start: 'top 64px',
-                    end: () => `+=${scrollVal}`,
-                    scrub: 1,
-                    invalidateOnRefresh: true,
-                  }
-                })
-                gridScrollTriggerRef.current = tween.scrollTrigger
-              }
             }
-
-            // Grid view cards — stagger scale+fade reveal
-            gsap.utils.toArray('.grid-series-card').forEach((card, i) => {
-              gsap.fromTo(card,
-                { opacity: 0, y: 50, scale: 0.96 },
-                { opacity: 1, y: 0, scale: 1, duration: 1.0, ease: 'power3.out', delay: 0.1 + i * 0.1 }
+          } else {
+            // Animate collection typographic index items
+            const rows = gsap.utils.toArray('.index-row-anim')
+            if (rows.length) {
+              gsap.fromTo(rows,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.04, overwrite: 'auto' }
               )
-            })
+            }
+            const introElems = scroller.querySelectorAll('.collection-intro-anim')
+            if (introElems.length) {
+              gsap.fromTo(introElems,
+                { opacity: 0, y: 15 },
+                { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1, overwrite: 'auto' }
+              )
+            }
           }
 
           ScrollTrigger.refresh()
@@ -313,7 +296,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
 
       return () => { clearTimeout(timer) }
     }
-  }, { scope: containerRef, dependencies: [selectedSeries, viewMode], revertOnUpdate: true })
+  }, { scope: containerRef, dependencies: [selectedSeries, selectedCollection, visibleCollectionsCount], revertOnUpdate: true })
 
   // Editorial scroll animations — set up once after React mounts the content
   useEffect(() => {
@@ -327,7 +310,6 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
 
     const timer = setTimeout(() => {
       // Word-by-word fade-up for series description and photo writeups
-      // Matches the AboutPage biography/CTA animation exactly
       scroller.querySelectorAll('.reveal-text').forEach(el => {
         const spans = el.querySelectorAll('.word-span')
         if (!spans.length) return
@@ -413,29 +395,202 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
     }
   }, [renderDetailContent, selectedSeries])
 
-  // Reset the list-animation flag when opening a series, so the list animates again on return
-  useEffect(() => {
-    if (selectedSeries) listAnimatedRef.current = false
-  }, [selectedSeries])
-
-  // Styling helpers
-  const toggleBtnStyle = (active) => ({
-    fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-    letterSpacing: '.25em', textTransform: 'uppercase',
-    padding: '.6rem 1.8rem', cursor: 'none',
-    background: active ? 'var(--text)' : 'transparent',
-    color: active ? 'var(--dark)' : 'var(--muted)',
-    border: `1px solid ${active ? 'var(--text)' : 'var(--border)'}`,
-    borderRadius: '100px',
-    transition: 'background .3s, color .3s, border-color .3s',
-  })
-
   return (
     <div
       ref={containerRef}
       className="page-scroll"
       style={{ background: 'var(--dark)', minHeight: '100vh', color: 'var(--text)' }}
     >
+      <style>{`
+        /* Option A: Collections Directory styles */
+        .collections-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 3.5rem;
+          width: 100%;
+        }
+        @media (max-width: 1024px) {
+          .collections-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+          }
+        }
+        @media (max-width: 640px) {
+          .collections-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+        }
+        .collection-card {
+          cursor: none;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+          text-decoration: none;
+          color: inherit;
+        }
+        .collection-card-img-wrap {
+          aspect-ratio: 3/2;
+          overflow: hidden;
+          border-radius: 4px;
+          border: 1px solid var(--border);
+          position: relative;
+          background: var(--mid);
+        }
+        .collection-card-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .collection-card:hover .collection-card-img {
+          transform: scale(1.04);
+        }
+
+        /* Option C: Typographic Index styles */
+        .index-table {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          margin-top: 2.5rem;
+        }
+        .index-row {
+          display: grid;
+          grid-template-columns: 60px 140px 1fr 200px 160px 40px;
+          align-items: center;
+          padding: 1.5rem 0;
+          border-bottom: 1px solid var(--border);
+          cursor: none;
+          background: transparent;
+          border-top: none;
+          border-left: none;
+          border-right: none;
+          text-align: left;
+          width: 100%;
+          transition: background-color 0.3s, padding-left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .index-row:hover {
+          background-color: rgba(255, 255, 255, 0.02);
+          padding-left: 1rem;
+        }
+        .index-row-arrow {
+          transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .index-row:hover .index-row-arrow {
+          transform: translateX(6px);
+        }
+        .index-row-img-wrap {
+          width: 110px;
+          aspect-ratio: 3/2;
+          overflow: hidden;
+          border-radius: 2px;
+          border: 1px solid var(--border);
+          background: var(--mid);
+        }
+        .index-row-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .mobile-only-meta {
+          display: none !important;
+        }
+
+        @media (max-width: 1024px) {
+          .index-row {
+            grid-template-columns: 50px 110px 1fr 180px 40px;
+            padding: 1.2rem 0;
+          }
+          .index-row-img-wrap {
+            width: 90px;
+          }
+          .index-row-camera {
+            display: none !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .index-row {
+            grid-template-columns: 90px 1fr 30px;
+            padding: 1rem 0;
+            gap: 1rem;
+          }
+          .index-row-img-wrap {
+            width: 80px;
+          }
+          .index-row-number,
+          .index-row-location,
+          .index-row-camera,
+          .index-row-desktop-title {
+            display: none !important;
+          }
+          .mobile-only-meta {
+            display: block !important;
+          }
+        }
+
+        /* Floating cursor follow thumbnail */
+        .floating-thumbnail {
+          display: block;
+        }
+        @media (max-width: 768px) {
+          .floating-thumbnail {
+            display: none !important;
+          }
+        }
+
+        /* Bento grid styles (used in editorial and fallback templates) */
+        .bento-grid {
+          display: grid !important;
+          grid-template-columns: repeat(3, 1fr) !important;
+          grid-auto-rows: 24rem !important;
+          grid-auto-flow: dense !important;
+          gap: 2rem !important;
+          width: 100% !important;
+        }
+        .bento-card-wide {
+          grid-column: span 2 !important;
+          grid-row: span 1 !important;
+        }
+        .bento-card-tall {
+          grid-column: span 1 !important;
+          grid-row: span 2 !important;
+          height: 100% !important;
+        }
+        .bento-card-square {
+          grid-column: span 1 !important;
+          grid-row: span 1 !important;
+        }
+        @media (max-width: 1024px) {
+          .bento-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            grid-auto-rows: 20rem !important;
+            gap: 1.5rem !important;
+          }
+          .bento-card-wide {
+            grid-column: span 2 !important;
+            grid-row: span 1 !important;
+          }
+          .bento-card-tall {
+            grid-column: span 1 !important;
+            grid-row: span 1 !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .bento-grid {
+            grid-template-columns: 1fr !important;
+            grid-auto-rows: 20rem !important;
+            gap: 1.2rem !important;
+          }
+          .bento-card-wide {
+            grid-column: span 1 !important;
+            grid-row: span 1 !important;
+          }
+          .bento-card-tall {
+            grid-column: span 1 !important;
+            grid-row: span 1 !important;
+          }
+        }
+      `}</style>
 
       {/* ══ LEVEL 1: SERIES EXPLORER ══ */}
       <div style={{ display: !selectedSeries ? 'flex' : 'none', flexDirection: 'column', minHeight: '100vh' }}>
@@ -443,290 +598,242 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         {/* Spacer to push down past the main site navbar */}
         <div style={{ height: '64px', width: '100%', flexShrink: 0 }} />
 
-        {/* LIST VIEW EXPLORER */}
-        <div style={{ display: viewMode === 'list' ? 'block' : 'none' }}>
-          {/* Header */}
-          <div style={{
-            position: 'sticky',
-            top: '64px',
-            zIndex: 90,
-            padding: '1.5rem 4rem',
-            background: 'var(--sticky-nav-bg)',
-            backdropFilter: 'blur(12px)',
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            borderBottom: '1px solid var(--border)'
-          }} className="list-gallery-header">
-            <div style={{ display: 'flex', gap: '.4rem' }}>
-              <button
-                onClick={() => handleViewModeChange('list')}
-                style={toggleBtnStyle(viewMode === 'list')}
-                onMouseEnter={e => {
-                  if (viewMode !== 'list') {
-                    e.currentTarget.style.borderColor = 'var(--text)'
-                    e.currentTarget.style.color = 'var(--text)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (viewMode !== 'list') {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                    e.currentTarget.style.color = 'var(--muted)'
-                  }
-                }}
-              >
-                List
-              </button>
-              <button
-                onClick={() => handleViewModeChange('grid')}
-                style={toggleBtnStyle(viewMode === 'grid')}
-                onMouseEnter={e => {
-                  if (viewMode !== 'grid') {
-                    e.currentTarget.style.borderColor = 'var(--text)'
-                    e.currentTarget.style.color = 'var(--text)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (viewMode !== 'grid') {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                    e.currentTarget.style.color = 'var(--muted)'
-                  }
-                }}
-              >
-                Grid
-              </button>
+        {/* Option A: Collections Landing Directory (when no collection is selected) */}
+        {!selectedCollection ? (
+          <div style={{ padding: '6rem 4rem 4rem 4rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+            
+            {/* Page Header */}
+            <div style={{ marginBottom: '5rem', width: '100%', textAlign: 'center' }}>
+              <h1 className="collection-intro-anim" style={{
+                fontFamily: 'var(--font-garamond)',
+                fontSize: 'clamp(2.5rem, 5.5vw, 4.2rem)',
+                fontWeight: 300,
+                lineHeight: 1.15,
+                color: 'var(--cream)',
+                textTransform: 'uppercase',
+                marginBottom: '1rem'
+              }}>
+                <LuxuryTitle text="Collections" />
+              </h1>
+              <p className="collection-intro-anim" style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'clamp(0.85rem, 1.4vw, 0.95rem)',
+                color: 'var(--text-muted)',
+                margin: '0 auto',
+                maxWidth: '36rem',
+                letterSpacing: '0.02em'
+              }}>
+                A curated directory of exceptional fine-art photography series.
+              </p>
             </div>
+
+            {/* Collections Grid */}
+            <div className="collections-grid">
+              {allDirectoryItems.slice(0, visibleCollectionsCount).map((item) => {
+                const isStandalone = item.isStandalone
+                const collectionCover = item.collection.coverImage
+                  ? urlFor(item.collection.coverImage).width(800).quality(85).url()
+                  : (item.series[0]?.coverImage
+                      ? urlFor(item.series[0].coverImage).width(800).quality(85).url()
+                      : '')
+
+                return (
+                  <button
+                    key={item.collection._id}
+                    onClick={() => {
+                      if (isStandalone) {
+                        setSelectedCollection({
+                          collection: {
+                            _id: 'standalone',
+                            title: 'Standalone Projects',
+                            description: 'Independent documentary captures and regional archives representing distinct visual essays.'
+                          },
+                          series: item.series
+                        })
+                      } else {
+                        setSelectedCollection(item)
+                      }
+                    }}
+                    className="collection-card collection-directory-card"
+                    style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left' }}
+                  >
+                    <div className="collection-card-img-wrap">
+                      {collectionCover ? (
+                        <img
+                          src={collectionCover}
+                          alt={item.collection.title}
+                          className="collection-card-img"
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)' }}>
+                          No Cover Image
+                        </div>
+                      )}
+                      {/* Series count badge */}
+                      <div style={{
+                        position: 'absolute', top: '1.2rem', right: '1.2rem',
+                        fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 500,
+                        color: 'var(--dark)', background: 'var(--cream)', padding: '4px 10px',
+                        borderRadius: '20px', letterSpacing: '0.05em'
+                      }}>
+                        {item.series.length} {item.series.length === 1 ? 'Series' : 'Series'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 style={{
+                        fontFamily: 'var(--font-garamond)', fontSize: 'clamp(1.4rem, 2vw, 1.8rem)',
+                        fontWeight: 300, color: 'var(--cream)', lineHeight: 1.25,
+                        textTransform: 'uppercase', margin: '0 0 0.5rem 0'
+                      }}>
+                        <LuxuryTitle text={item.collection.title} />
+                      </h3>
+                      {item.collection.description && (
+                        <p style={{
+                          fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
+                          color: 'var(--text-muted)', margin: 0,
+                          display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {item.collection.description}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Load More Button */}
+            {allDirectoryItems.length > visibleCollectionsCount && (
+              <button
+                onClick={() => setVisibleCollectionsCount(prev => prev + 3)}
+                className="load-more-btn"
+              >
+                <span>Load More</span>
+                <span className="arrow">→</span>
+              </button>
+            )}
+
           </div>
-
-          <div style={{ flex: 1, position: 'relative', display: 'flex', minHeight: '60vh' }}>
-            {/* Left Column: Series Rows */}
-            <div style={{ width: '55%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-              {seriesToUse.map((series, i) => (
-                <div
-                  key={series._id}
-                  onMouseEnter={e => onRowEnter(e, series)}
-                  onMouseLeave={onRowLeave}
-                  onClick={() => openSeries(series)}
-                  style={{
-                    padding: '1.4rem 4rem',
-                    borderTop: i === 0 ? '1px solid var(--border)' : undefined,
-                    borderBottom: '1px solid var(--border)',
-                    cursor: 'none',
-                    display: 'grid',
-                    gridTemplateColumns: '2.5rem 1fr auto auto',
-                    alignItems: 'center', gap: '2rem',
-                    transition: 'background .3s'
-                  }}
-                  className="list-series-row"
-                >
-                  <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                    letterSpacing: '.25em', color: 'var(--muted)'
-                  }}>{fmt(i + 1)}</span>
-
-                  <span style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 'clamp(1.3rem,2vw,1.9rem)',
-                    fontWeight: 800, letterSpacing: '-.02em',
-                    color: 'var(--text)'
-                  }}>{series.title.toUpperCase()}</span>
-
-                  <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                    letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--muted)'
-                  }}>{series.location}</span>
-
-                  <span className="series-arrow" style={{
-                    fontFamily: 'var(--font-mono)', fontSize: '.9rem',
-                    color: 'var(--accent)', display: 'inline-block'
-                  }}>→</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Right Column: Dynamic Cover Image (GSAP clip reveal) */}
-            <div
-              ref={coverPanelRef}
+        ) : (
+          /* Option C: Collection Typographic Index (when a collection is selected) */
+          <div
+            style={{ padding: '6rem 4rem 6rem 4rem', display: 'flex', flexDirection: 'column', flex: 1, position: 'relative' }}
+          >
+            {/* Back Button */}
+            <button
+              onClick={() => {
+                setSelectedCollection(null)
+                setVisibleCollectionsCount(3)
+              }}
+              className="collection-intro-anim"
               style={{
-                position: 'absolute', right: 0, top: 0,
-                width: '45%', height: '100%',
-                clipPath: 'inset(0 100% 0 0)',
-                overflow: 'hidden', pointerEvents: 'none',
-                background: 'var(--dark)'
+                background: 'none', border: 'none', padding: 0,
+                fontFamily: 'var(--font-garamond)', fontSize: '1rem', fontWeight: 300,
+                color: 'var(--accent)', cursor: 'none', display: 'flex', alignItems: 'center', gap: '8px',
+                marginBottom: '3.5rem', alignSelf: 'flex-start'
               }}
             >
-              <img
-                ref={coverImgRef}
-                src={undefined}
-                alt="Series cover preview"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: 'linear-gradient(to right, var(--list-fade-start) 0%, var(--list-fade-end) 35%)'
-              }} />
+              <span>←</span> <span>Back to Collections</span>
+            </button>
+
+            {/* Collection Title & Intro */}
+            <div style={{ marginBottom: '4.5rem', maxWidth: 'none' }}>
+              <span className="collection-intro-anim" style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.65rem',
+                letterSpacing: '.3em',
+                color: 'var(--accent)',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: '0.8rem'
+              }}>{selectedCollection.collection._id === 'standalone' ? 'ARCHIVES /' : 'COLLECTION /'}</span>
+              
+              <h2 className="collection-intro-anim" style={{
+                fontFamily: 'var(--font-garamond)',
+                fontSize: 'clamp(2rem, 4.5vw, 3.2rem)',
+                fontWeight: 300,
+                lineHeight: 1.15,
+                color: 'var(--cream)',
+                marginBottom: '1.2rem',
+                textTransform: 'uppercase'
+              }}>
+                <LuxuryTitle text={selectedCollection.collection.title} />
+              </h2>
             </div>
-          </div>
-        </div>
 
-        {/* GRID VIEW EXPLORER */}
-        <div style={{ display: viewMode === 'grid' ? 'block' : 'none', width: '100%' }}>
-          <div
-            ref={gridSectionRef}
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: 'calc(100vh - 64px)',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-          {/* Header */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            zIndex: 90,
-            padding: '1.5rem 4rem',
-            background: 'var(--sticky-nav-bg)',
-            backdropFilter: 'blur(12px)',
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            borderBottom: '1px solid var(--border)'
-          }} className="grid-gallery-header">
-            <div style={{ display: 'flex', gap: '.4rem' }}>
-              <button
-                onClick={() => handleViewModeChange('list')}
-                style={toggleBtnStyle(viewMode === 'list')}
-                onMouseEnter={e => {
-                  if (viewMode !== 'list') {
-                    e.currentTarget.style.borderColor = 'var(--text)'
-                    e.currentTarget.style.color = 'var(--text)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (viewMode !== 'list') {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                    e.currentTarget.style.color = 'var(--muted)'
-                  }
-                }}
-              >
-                List
-              </button>
-              <button
-                onClick={() => handleViewModeChange('grid')}
-                style={toggleBtnStyle(viewMode === 'grid')}
-                onMouseEnter={e => {
-                  if (viewMode !== 'grid') {
-                    e.currentTarget.style.borderColor = 'var(--text)'
-                    e.currentTarget.style.color = 'var(--text)'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (viewMode !== 'grid') {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                    e.currentTarget.style.color = 'var(--muted)'
-                  }
-                }}
-              >
-                Grid
-              </button>
+            {/* Typographic Index List */}
+            <div className="index-table">
+              {selectedCollection.series.map((series, idx) => {
+                const cover = series.coverImage
+                  ? urlFor(series.coverImage).width(300).quality(80).url()
+                  : ''
+                return (
+                  <button
+                    key={series._id}
+                    onClick={() => openSeries(series)}
+                    className="index-row index-row-anim"
+                  >
+                    {/* Number */}
+                    <span className="index-row-number" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      {fmt(idx + 1)}
+                    </span>
+                    
+                    {/* Inline Thumbnail */}
+                    <div className="index-row-img-wrap">
+                      {cover ? (
+                        <img src={cover} alt="" className="index-row-img" />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: 'var(--border)' }} />
+                      )}
+                    </div>
+
+                    {/* Desktop Title */}
+                    <span className="index-row-desktop-title" style={{
+                      fontFamily: 'var(--font-garamond)', fontSize: 'clamp(1.4rem, 2.5vw, 2.0rem)',
+                      fontWeight: 300, color: 'var(--cream)', textTransform: 'uppercase',
+                      letterSpacing: '0.01em'
+                    }}>
+                      <LuxuryTitle text={series.title} />
+                    </span>
+
+                    {/* Mobile stacked title/meta */}
+                    <div className="mobile-only-meta" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{
+                        fontFamily: 'var(--font-garamond)', fontSize: '1.25rem', fontWeight: 300,
+                        color: 'var(--cream)', textTransform: 'uppercase', lineHeight: 1.2
+                      }}>
+                        <LuxuryTitle text={series.title} />
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)'
+                      }}>
+                        {series.location} {series.year ? `| ${series.year}` : ''}
+                      </span>
+                    </div>
+
+                    {/* Location */}
+                    <span className="index-row-location" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      {series.location || '—'}
+                    </span>
+
+                    {/* Camera / Year */}
+                    <span className="index-row-camera" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      {series.cameraSelect === 'other' ? series.cameraCustom : (series.cameraSelect || series.camera || '—')} {series.year ? `(${series.year})` : ''}
+                    </span>
+
+                    {/* Arrow */}
+                    <span className="index-row-arrow" style={{ fontSize: '1.5rem', color: 'var(--accent)', justifySelf: 'end' }}>
+                      →
+                    </span>
+                  </button>
+                )
+              })}
             </div>
+
           </div>
-
-          {/* Track */}
-          <div
-            ref={gridTrackRef}
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              flexWrap: 'nowrap',
-              gap: '4rem',
-              padding: '6rem 8rem 0 4rem',
-              width: 'max-content',
-              alignItems: 'center',
-              willChange: 'transform'
-            }}
-          >
-            {seriesToUse.map((series, i) => {
-              const cover = series.coverImage
-                ? urlFor(series.coverImage).width(800).quality(85).url()
-                : ''
-
-              return (
-                <div
-                  key={series._id}
-                  onClick={() => openSeries(series)}
-                  onMouseEnter={() => setHoveredCard(series._id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                  className="grid-series-card"
-                  style={{
-                    position: 'relative',
-                    overflow: 'hidden',
-                    height: 'clamp(24rem, 55vh, 32rem)',
-                    width: 'clamp(18rem, 25vw, 24rem)',
-                    flexShrink: 0,
-                    cursor: 'none',
-                    borderRadius: '4px',
-                    background: 'var(--mid)',
-                    border: '1px solid var(--border)'
-                  }}
-                >
-                  {cover && (
-                    <img
-                      src={cover}
-                      alt={series.title}
-                      style={{
-                        width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-                        transform: hoveredCard === series._id ? 'scale(1.04)' : 'scale(1)',
-                        transition: 'transform .8s cubic-bezier(.25,1,.5,1)'
-                      }}
-                    />
-                  )}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.2) 60%, transparent 100%)'
-                  }} />
-
-                  {/* Index marker top right */}
-                  <div style={{
-                    position: 'absolute', top: '2rem', right: '2rem',
-                    fontFamily: 'var(--font-mono)', fontSize: '.7rem',
-                    letterSpacing: '.2em', color: 'var(--accent-on-image)'
-                  }}>
-                    {fmt(i + 1)}
-                  </div>
-
-                  {/* Meta bottom left */}
-                  <div style={{
-                    position: 'absolute', bottom: 'clamp(1.5rem, 5%, 2.5rem)', left: 'clamp(1.5rem, 5%, 2.5rem)', right: 'clamp(1.5rem, 5%, 2.5rem)'
-                  }}>
-                    <div style={{
-                      fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                      letterSpacing: '.25em', textTransform: 'uppercase',
-                      color: 'var(--accent-on-image)', marginBottom: '.6rem'
-                    }}>
-                      {series.location}
-                    </div>
-                    <h3 style={{
-                      fontFamily: 'var(--font-display)', fontSize: 'clamp(1.3rem, 2vw, 1.7rem)',
-                      fontWeight: 500, color: 'var(--text-on-image)',
-                      lineHeight: 1.1, letterSpacing: '-.01em', marginBottom: '.4rem'
-                    }}>
-                      {series.title.toUpperCase()}
-                    </h3>
-                    <div style={{
-                      fontFamily: 'var(--font-mono)', fontSize: '.65rem',
-                      color: 'var(--text-on-image-muted)', letterSpacing: '.1em'
-                    }}>
-                      {series.year} — Explore Series →
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
+        )}
 
         {/* Explorer Footer */}
         <div style={{
@@ -734,7 +841,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           flexWrap: 'wrap', gap: '1.5rem'
         }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '.15em', color: 'var(--muted)' }}>
+          <span style={{ fontFamily: 'var(--font-garamond)', fontSize: '13px', fontWeight: 300, letterSpacing: '.15em', color: 'var(--muted)' }}>
             {fmt(seriesToUse.length)} SERIES AVAILABLE
           </span>
 
@@ -815,7 +922,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
             ))}
           </div>
 
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '.15em', color: 'var(--muted)' }}>
+          <span style={{ fontFamily: 'var(--font-garamond)', fontSize: '13px', fontWeight: 300, letterSpacing: '.15em', color: 'var(--muted)' }}>
             WRD Photography © 2026
           </span>
         </div>
@@ -893,7 +1000,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
               Series Portfolio / {selectedSeries?.location}
             </div>
             <h1 style={{
-              fontFamily: 'var(--font-display)', fontWeight: 800,
+              fontFamily: 'var(--font-garamond)', fontWeight: 300,
               fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', lineHeight: '1.05',
               letterSpacing: '-.02em', color: 'var(--text-on-image)',
               textTransform: 'uppercase'
@@ -1012,10 +1119,10 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
                             padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'
                           }}>
                             <h4 style={{
-                              fontFamily: 'var(--font-sans)', fontSize: '1.6rem',
-                              color: 'var(--text-on-image)', fontWeight: 300, lineHeight: 1.2
+                              color: 'var(--text-on-image)', lineHeight: 1.2,
+                              fontSize: 'clamp(1.1rem, 1.8vw, 1.4rem)'
                             }}>
-                              {photo.title}
+                              <LuxuryTitle text={photo.title} />
                             </h4>
                             {photo.location && (
                               <div style={{
@@ -1213,7 +1320,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
               if (containerRef.current) containerRef.current.scrollTo({ top: 0, behavior: 'instant' })
             }}
             style={{
-              fontFamily: 'var(--font-mono)', fontSize: '.7rem',
+              fontFamily: 'var(--font-garamond)', fontSize: '.85rem', fontWeight: 300,
               letterSpacing: '.25em', textTransform: 'uppercase',
               background: 'none', border: 'none', color: 'var(--accent)', cursor: 'none'
             }}
@@ -1298,7 +1405,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
             ))}
           </div>
 
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '.15em', color: 'var(--muted)' }}>
+          <span style={{ fontFamily: 'var(--font-garamond)', fontSize: '13px', fontWeight: 300, letterSpacing: '.15em', color: 'var(--muted)' }}>
             WRD Photography © 2026
           </span>
         </div>

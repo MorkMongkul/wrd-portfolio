@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { urlFor } from '@/sanity/lib/image'
+import LuxuryTitle from './LuxuryTitle'
 
 export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
   const overlayRef  = useRef(null)
@@ -184,10 +185,12 @@ export default function Lightbox({ photo, photos, onClose, onPrev, onNext }) {
 
           {/* title */}
           <h2 style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'clamp(2.5rem,4vw,3.5rem)', fontWeight: 300,
-            lineHeight: 1, letterSpacing: '-1px', color: 'var(--text)',
-          }}>{photo.title}</h2>
+            fontSize: 'clamp(2rem, 3.5vw, 3rem)',
+            lineHeight: 1.1, color: 'var(--text)',
+            fontWeight: 400
+          }}>
+            <LuxuryTitle text={photo.title} />
+          </h2>
 
           {/* divider */}
           <div style={{

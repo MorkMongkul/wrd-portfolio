@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import { urlFor } from '@/sanity/lib/image'
+import { splitLuxuryTitle } from './LuxuryTitle'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
@@ -13,47 +14,25 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
   const counterRef   = useRef(null)
 
   // Helper to split a string into individual word blocks for the line-by-line reveal effect
-  const splitTitle = (titleText) => {
-    if (!titleText) return null
-    return titleText.split(' ').map((word, index) => (
-      <span key={index} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom', marginRight: '0.3em', lineHeight: '1.15' }}>
-        <span className="title-line-inner" style={{ display: 'inline-block', transform: 'translateY(110%)', willChange: 'transform' }}>
-          {word}
-        </span>
-      </span>
-    ))
-  }
+  const splitTitle = (titleText) => splitLuxuryTitle(titleText, 'title-line-inner')
 
-  // ── Construct slides list: Hero Cover + featured Series, or fallback to legacy photos ──
+  // ── Construct slides list: Featured Collections ──
   const slides = useMemo(() => {
     const list = []
-    if (coverData && coverData.heroImage) {
-      // Slide 0: Hero Cover Page
-      list.push({
-        _id: 'hero-cover',
-        isHero: true,
-        image: coverData.heroImage,
-        title: coverData.headingTitle || 'Featured Work',
-        subtitle: coverData.subHeading || ''
+    if (coverData && coverData.featuredCollections && coverData.featuredCollections.length > 0) {
+      coverData.featuredCollections.forEach((collection, idx) => {
+        if (collection) {
+          list.push({
+            _id: collection._id || `col-${idx}`,
+            isHero: false,
+            isLegacy: false,
+            image: collection.coverImage,
+            title: collection.title || 'Untitled Collection',
+            subtitle: collection.description || '',
+            seriesId: collection._id // Link to this collection in the Gallery
+          })
+        }
       })
-
-      // Slides 1..N: Selected featured Series
-      if (coverData.featuredSeries && coverData.featuredSeries.length > 0) {
-        coverData.featuredSeries.forEach((series, sIdx) => {
-          if (series) {
-            list.push({
-              _id: series._id || `series-${sIdx}`,
-              isHero: false,
-              isLegacy: false,
-              image: series.coverImage,
-              title: series.title || 'Untitled Series',
-              location: series.location || '',
-              year: series.year || '',
-              seriesId: series._id
-            })
-          }
-        })
-      }
     }
     return list
   }, [coverData])
@@ -62,22 +41,14 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
 
   // ── Premium Transitions & Scroll animations ──
   useGSAP(() => {
-    if (TOTAL < 2) return
-
     const slidesElements = slidesRef.current.filter(Boolean)
     if (!slidesElements.length) return
 
     const scroller = containerRef.current
     const wrapper  = scroller.querySelector('.slides-wrapper')
 
-    // Stack slides via z-index
-    gsap.set(slidesElements, { zIndex: (i) => slidesElements.length - i })
-
-    // All slides except last start visible (clip reveals the slide beneath)
-    gsap.set(slidesElements.slice(0, -1), { clipPath: 'inset(0 0 0 0)' })
-
     // Pre-set hidden states for all slides
-    slidesElements.forEach((slideEl, i) => {
+    slidesElements.forEach((slideEl) => {
       const titleLines = slideEl.querySelectorAll('.title-line-inner')
       const fadeTexts = slideEl.querySelectorAll('.fade-text')
       
@@ -108,6 +79,14 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
         delay: 0.8
       })
     }
+
+    if (TOTAL < 2) return
+
+    // Stack slides via z-index
+    gsap.set(slidesElements, { zIndex: (i) => slidesElements.length - i })
+
+    // All slides except last start visible (clip reveals the slide beneath)
+    gsap.set(slidesElements.slice(0, -1), { clipPath: 'inset(0 0 0 0)' })
 
     // Build scroll timeline
     const tl = gsap.timeline()
@@ -249,9 +228,9 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
                 padding: '2rem', textAlign: 'center', zIndex: 5
               }}>
                 <h1 className="hero-title" style={{
-                  fontFamily: 'var(--font-display)',
+                  fontFamily: 'var(--font-garamond)',
                   fontSize: 'clamp(2.5rem, 6.5vw, 4.8rem)',
-                  fontWeight: 800,
+                  fontWeight: 300,
                   lineHeight: 1.05,
                   letterSpacing: '-.02em',
                   color: 'var(--text-on-image)',
@@ -286,9 +265,9 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
                 padding: '2rem', textAlign: 'center', zIndex: 5
               }}>
                 <h2 className="series-title" style={{
-                  fontFamily: 'var(--font-display)',
+                  fontFamily: 'var(--font-garamond)',
                   fontSize: 'clamp(2.2rem, 5.5vw, 4.0rem)',
-                  fontWeight: 800,
+                  fontWeight: 300,
                   lineHeight: 1.1,
                   letterSpacing: '-.02em',
                   color: 'var(--text-on-image)',
@@ -299,16 +278,21 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
                   {splitTitle(slide.title)}
                 </h2>
 
-                <div className="fade-text" style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.25em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text-on-image-muted)',
-                  marginBottom: '2rem'
-                }}>
-                  {slide.location}{slide.year ? ` — ${slide.year}` : ''}
-                </div>
+                {slide.subtitle && (
+                  <div className="fade-text" style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'clamp(0.75rem, 1.3vw, 0.85rem)',
+                    fontWeight: 300,
+                    lineHeight: 1.6,
+                    color: 'var(--text-on-image-muted)',
+                    maxWidth: '38rem',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    marginBottom: '2rem'
+                  }}>
+                    {slide.subtitle}
+                  </div>
+                )}
 
                 {/* Discover More button */}
                 <div className="fade-text">
@@ -372,9 +356,9 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
 
                   <div style={{ overflow: 'hidden' }}>
                     <h2 className="legacy-title" style={{
-                      display: 'block', fontFamily: 'var(--font-display)',
+                      display: 'block', fontFamily: 'var(--font-garamond)',
                       fontSize: 'clamp(2.5rem, 5.5vw, 4.2rem)', lineHeight: '1.05',
-                      fontWeight: 800, letterSpacing: '-.02em',
+                      fontWeight: 300, letterSpacing: '-.02em',
                       color: 'var(--text-on-image)'
                     }}>
                       {splitTitle(slide.title)}
@@ -397,42 +381,46 @@ export default function FeaturedPage({ coverData, onDiscoverSeries }) {
         ))}
 
         {/* Counter */}
-        <div style={{
-          position: 'absolute', bottom: '3.5rem', right: '4rem',
-          display: 'flex', alignItems: 'center', gap: '1.2rem', zIndex: 10
-        }}>
-          <div style={{ height: '1.4rem', overflow: 'hidden',
-            fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--text-on-image)'
+        {TOTAL >= 2 && (
+          <div style={{
+            position: 'absolute', bottom: '3.5rem', right: '4rem',
+            display: 'flex', alignItems: 'center', gap: '1.2rem', zIndex: 10
           }}>
-            <div ref={counterRef}>
-              {slides.map((_, i) => (
-                <div key={i} style={{ height: '1.4rem', lineHeight: '1.4rem' }}>
-                  {fmt(i + 1)}
-                </div>
-              ))}
+            <div style={{ height: '1.4rem', overflow: 'hidden',
+              fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--text-on-image)'
+            }}>
+              <div ref={counterRef}>
+                {slides.map((_, i) => (
+                  <div key={i} style={{ height: '1.4rem', lineHeight: '1.4rem' }}>
+                    {fmt(i + 1)}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ width: 30, height: 1, background: 'var(--muted-on-image)' }}/>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--muted-on-image)' }}>
+              {fmt(TOTAL)}
             </div>
           </div>
-          <div style={{ width: 30, height: 1, background: 'var(--muted-on-image)' }}/>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--muted-on-image)' }}>
-            {fmt(TOTAL)}
-          </div>
-        </div>
+        )}
 
         {/* Dots */}
-        <div style={{
-          position: 'absolute', left: '50%', bottom: '3.5rem',
-          transform: 'translateX(-50%)', zIndex: 10,
-          display: 'flex', gap: '.8rem', alignItems: 'center'
-        }}>
-          {slides.map((_, i) => (
-            <div key={i} className="dot" style={{
-              width: 4, height: 4, borderRadius: '50%',
-              background: i === 0 ? 'var(--accent-on-image)' : 'var(--muted-on-image)',
-              transform: i === 0 ? 'scale(1.6)' : 'scale(1)',
-              transition: 'background .3s, transform .3s'
-            }}/>
-          ))}
-        </div>
+        {TOTAL >= 2 && (
+          <div style={{
+            position: 'absolute', left: '50%', bottom: '3.5rem',
+            transform: 'translateX(-50%)', zIndex: 10,
+            display: 'flex', gap: '.8rem', alignItems: 'center'
+          }}>
+            {slides.map((_, i) => (
+              <div key={i} className="dot" style={{
+                width: 4, height: 4, borderRadius: '50%',
+                background: i === 0 ? 'var(--accent-on-image)' : 'var(--muted-on-image)',
+                transform: i === 0 ? 'scale(1.6)' : 'scale(1)',
+                transition: 'background .3s, transform .3s'
+              }}/>
+            ))}
+          </div>
+        )}
 
         {/* Hint */}
         {TOTAL >= 2 && (

@@ -54,21 +54,21 @@ export default function Nav({ activePage, onNavigate }) {
           }}
         >
           <span className="nav-wordmark-full" style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.1rem', fontWeight: 500,
-            letterSpacing: '0.38em', textTransform: 'uppercase',
+            fontFamily: 'var(--font-garamond)',
+            fontSize: '1.25rem', fontWeight: 300,
+            letterSpacing: '0.32em', textTransform: 'uppercase',
             color: 'var(--text)',
           }}>WRD Photography</span>
 
           <span className="nav-wordmark-short" style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.1rem', fontWeight: 500,
+            fontFamily: 'var(--font-garamond)',
+            fontSize: '1.25rem', fontWeight: 300,
             letterSpacing: '0.2em', textTransform: 'uppercase',
             color: 'var(--text)',
             display: 'none',
           }}>WRD</span>
         </button>
-
+ 
         {/* ── Links + theme toggle ── */}
         <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
           {links.map(link => (
@@ -76,8 +76,8 @@ export default function Nav({ activePage, onNavigate }) {
               background: 'none', border: 'none',
               borderBottom: activePage === link.id ? '1px solid var(--accent)' : '1px solid transparent',
               paddingBottom: '4px', cursor: 'pointer',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '14px', fontWeight: activePage === link.id ? 500 : 400,
+              fontFamily: 'var(--font-garamond)',
+              fontSize: '15px', fontWeight: activePage === link.id ? 400 : 300,
               letterSpacing: '1.5px', textTransform: 'uppercase',
               color: activePage === link.id ? 'var(--text)' : 'var(--text-muted)',
               WebkitFontSmoothing: 'antialiased', transition: 'color 0.2s',

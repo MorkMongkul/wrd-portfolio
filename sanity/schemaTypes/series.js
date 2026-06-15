@@ -17,6 +17,13 @@ export default {
       validation: Rule => Rule.required()
     },
     {
+      name: 'collection',
+      title: 'Collection Group',
+      type: 'reference',
+      to: [{ type: 'collection' }],
+      description: 'Optional. Group this series under a parent collection (e.g., The Pearl of Asia and Beyond).'
+    },
+    {
       name: 'description',
       title: 'Description',
       type: 'text',

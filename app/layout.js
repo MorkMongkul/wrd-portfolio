@@ -40,8 +40,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${outfit.variable} ${inter.variable} ${plusJakarta.variable} ${harmony.variable} ${pinyon.variable}`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${outfit.variable} ${inter.variable} ${plusJakarta.variable} ${harmony.variable} ${pinyon.variable}`} suppressHydrationWarning>
         {children}
       </body>
     </html>

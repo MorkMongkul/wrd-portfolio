@@ -189,18 +189,115 @@ export default function AboutPage({ onNavigate, aboutData }) {
 
   return (
     <div ref={containerRef} className="page-scroll" style={{ background: 'var(--dark)' }}>
+      <style>{`
+        .about-hero-section {
+          height: 100vh;
+          display: grid;
+          grid-template-columns: 48% 52%;
+          position: relative;
+          overflow: hidden;
+        }
+        .about-hero-text-col {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 4rem 3rem 0 4rem;
+          position: relative;
+          z-index: 2;
+        }
+        .about-hero-img-col {
+          position: relative;
+          overflow: hidden;
+        }
+        .about-hero-edge-blend {
+          position: absolute;
+          top: 0;
+          left: -2px;
+          width: 80px;
+          height: 100%;
+          z-index: 10;
+          background: linear-gradient(to right, var(--dark) 15%, var(--dark-transparent) 100%);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          mask-image: linear-gradient(to right, black 25%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, black 25%, transparent 100%);
+          pointer-events: none;
+        }
+        .cta-section {
+          padding: 12rem 4rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        .cta-contact-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          max-width: 44rem;
+          width: 100%;
+        }
+        .about-footer {
+          padding: 2.5rem 4rem;
+          border-top: 1px solid var(--border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+          .about-hero-section {
+            grid-template-columns: 1fr !important;
+            height: auto !important;
+          }
+          .about-hero-text-col {
+            padding: 6rem 1.5rem 3rem 1.5rem !important;
+          }
+          .about-hero-img-col {
+            height: 25rem !important;
+          }
+          .about-hero-edge-blend {
+            display: none !important;
+          }
+          .cta-section {
+            padding: 6rem 1.5rem !important;
+          }
+          .about-footer {
+            padding: 2.5rem 1.5rem !important;
+            flex-direction: column !important;
+            text-align: center !important;
+          }
+        }
+        @media (min-width: 1440px) {
+          .about-hero-text-col {
+            padding: 6rem 5rem 0 6rem !important;
+          }
+          .cta-section {
+            padding: 16rem 6rem !important;
+          }
+          .about-footer {
+            padding: 3rem 6rem !important;
+          }
+        }
+        @media (min-width: 1920px) {
+          .about-hero-text-col {
+            padding: 8rem 8rem 0 10rem !important;
+          }
+          .cta-section {
+            padding: 20rem 10rem !important;
+          }
+          .about-footer {
+            padding: 4rem 10rem !important;
+          }
+        }
+      `}</style>
 
       {/* ══ HERO ══ */}
-      <div className="about-hero-section" style={{
-        height: '100vh', display: 'grid',
-        gridTemplateColumns: '48% 52%',
-        position: 'relative', overflow: 'hidden'
-      }}>
+      <div className="about-hero-section">
         {/* left */}
-        <div style={{
-          display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: '4rem 3rem 0 4rem', position: 'relative', zIndex: 2
-        }}>
+        <div className="about-hero-text-col">
           <div ref={titleRef} style={{ marginBottom: '3.5rem' }}>
             {headingLines.map((line, i) => (
               <div key={i} style={{
@@ -229,7 +326,7 @@ export default function AboutPage({ onNavigate, aboutData }) {
         </div>
 
         {/* right — image */}
-        <div style={{ position: 'relative', overflow: 'hidden' }}>
+        <div className="about-hero-img-col">
           <div className="about-hero-img-wrap" style={{
             position: 'absolute', inset: 0, overflow: 'hidden'
           }}>
@@ -240,30 +337,13 @@ export default function AboutPage({ onNavigate, aboutData }) {
             }}/>
           </div>
           {/* Left fade and blur to blend the vertical edge into the text column */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: -2,
-            width: '80px',
-            height: '100%',
-            zIndex: 10,
-            background: 'linear-gradient(to right, var(--dark) 15%, var(--dark-transparent) 100%)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            maskImage: 'linear-gradient(to right, black 25%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, black 25%, transparent 100%)',
-            pointerEvents: 'none'
-          }}/>
+          <div className="about-hero-edge-blend" />
         </div>
       </div>
 
 
       {/* ══ CTA ══ */}
-      <div className="cta-section" style={{
-        padding: '12rem 4rem',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', textAlign: 'center'
-      }}>
+      <div className="cta-section">
         <h2 className="cta-title" style={{
           fontFamily: 'var(--font-display)', fontWeight: 800,
           fontSize: 'clamp(2.8rem, 4.5vw, 4.2rem)', lineHeight: 1.15,
@@ -279,13 +359,7 @@ export default function AboutPage({ onNavigate, aboutData }) {
           {splitWords(ctaDescriptionText)}
         </p>
 
-        <div className="cta-contact-wrapper" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          maxWidth: '44rem',
-          width: '100%'
-        }}>
+        <div className="cta-contact-wrapper">
           {/* Contact Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', textAlign: 'center' }}>
             <div
@@ -368,11 +442,7 @@ export default function AboutPage({ onNavigate, aboutData }) {
       </div>
 
       {/* ══ FOOTER ══ */}
-      <div style={{
-        padding: '2.5rem 4rem', borderTop: '1px solid var(--border)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'wrap', gap: '1.5rem'
-      }}>
+      <div className="about-footer">
         <div style={{
           fontFamily: 'var(--font-garamond)', fontSize: '1.1rem', fontWeight: 300,
           letterSpacing: '.18em', color: 'var(--cream)'

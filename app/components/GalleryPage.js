@@ -590,6 +590,232 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
             grid-row: span 1 !important;
           }
         }
+
+        /* Responsive Container Paddings */
+        .collections-directory-container {
+          padding: 6rem 4rem 4rem 4rem;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+        }
+        .typographic-index-container {
+          padding: 6rem 4rem 6rem 4rem;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          position: relative;
+        }
+        @media (max-width: 640px) {
+          .collections-directory-container {
+            padding: 4rem 1.5rem 3rem 1.5rem !important;
+          }
+          .typographic-index-container {
+            padding: 4rem 1.5rem 4rem 1.5rem !important;
+          }
+        }
+
+        /* Detail View Layout Components */
+        .detail-nav {
+          position: sticky;
+          top: 64px;
+          z-index: 100;
+          padding: 1.5rem 4rem;
+          background: var(--sticky-nav-bg);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .detail-hero-section {
+          height: 75vh;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          padding: 0 4rem 6rem;
+          background: var(--dark);
+        }
+        .detail-metadata-section {
+          padding: 6rem 4rem;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 4rem;
+          border-bottom: 1px solid var(--border);
+        }
+        .detail-photos-grid-section {
+          display: flex;
+          flex-direction: column;
+          gap: 8rem;
+          padding: 8rem 4rem;
+        }
+        .detail-footer {
+          padding: 2.5rem 4rem;
+          border-top: 1px solid var(--border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+        }
+        
+        /* Image and Gallery Grid Item Sizing */
+        .ed-image-wrap {
+          flex: 1 1 30rem;
+          position: relative;
+          overflow: hidden;
+          height: 42rem;
+          cursor: none;
+          background: var(--dark);
+          border-radius: 2px;
+          visibility: hidden;
+        }
+        .ed-image-wrap-full {
+          width: 100%;
+          height: 65vh;
+          position: relative;
+          overflow: hidden;
+          cursor: none;
+          background: var(--dark);
+          border-radius: 2px;
+          visibility: hidden;
+        }
+        .masonry-item-inner {
+          flex: 1 1 20rem;
+          position: relative;
+          overflow: hidden;
+          height: 35rem;
+          cursor: none;
+          background: var(--dark);
+          border-radius: 2px;
+          visibility: hidden;
+        }
+
+        /* Detail View Responsive Spacing */
+        @media (max-width: 1024px) {
+          .ed-image-wrap {
+            height: 32rem;
+          }
+        }
+        @media (max-width: 640px) {
+          .detail-nav {
+            padding: 1.2rem 1.5rem !important;
+          }
+          .detail-hero-section {
+            padding: 0 1.5rem 4rem !important;
+          }
+          .detail-metadata-section {
+            padding: 4rem 1.5rem !important;
+            gap: 2.5rem !important;
+          }
+          .detail-photos-grid-section {
+            padding: 4rem 1.5rem !important;
+            gap: 4rem !important;
+          }
+          .detail-footer {
+            padding: 2.5rem 1.5rem !important;
+          }
+          .ed-image-wrap, .ed-image-wrap-full, .masonry-item-inner {
+            height: 22rem !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .detail-nav-active-label {
+            display: none !important;
+          }
+        }
+
+        /* Large Screen Responsive Scaling */
+        @media (min-width: 1440px) {
+          .collections-directory-container,
+          .typographic-index-container {
+            padding: 8rem 6rem 6rem 6rem;
+          }
+          .collections-grid {
+            gap: 4.5rem;
+          }
+          .index-row {
+            padding: 2rem 0;
+            gap: 2rem;
+          }
+          .index-row-img-wrap {
+            width: 140px;
+          }
+          .detail-nav {
+            padding: 2rem 6rem;
+          }
+          .detail-hero-section {
+            padding: 0 6rem 8rem;
+          }
+          .detail-metadata-section {
+            padding: 8rem 6rem;
+            gap: 6rem;
+          }
+          .detail-photos-grid-section {
+            padding: 10rem 6rem;
+            gap: 10rem;
+          }
+          .detail-footer {
+            padding: 3rem 6rem;
+          }
+          .ed-image-wrap {
+            height: 48rem;
+          }
+          .masonry-item-inner {
+            height: 40rem;
+          }
+          .bento-grid {
+            grid-auto-rows: 28rem !important;
+            gap: 2.5rem !important;
+          }
+        }
+
+        @media (min-width: 1920px) {
+          .collections-directory-container,
+          .typographic-index-container {
+            padding: 10rem 10rem 8rem 10rem;
+          }
+          .collections-grid {
+            gap: 5.5rem;
+          }
+          .index-row {
+            padding: 2.5rem 0;
+            gap: 3rem;
+          }
+          .index-row-img-wrap {
+            width: 160px;
+          }
+          .detail-nav {
+            padding: 2.5rem 10rem;
+          }
+          .detail-hero-section {
+            padding: 0 10rem 10rem;
+          }
+          .detail-metadata-section {
+            padding: 10rem 10rem;
+            gap: 8rem;
+          }
+          .detail-photos-grid-section {
+            padding: 12rem 10rem;
+            gap: 12rem;
+          }
+          .detail-footer {
+            padding: 4rem 10rem;
+          }
+          .ed-image-wrap {
+            height: 56rem;
+          }
+          .masonry-item-inner {
+            height: 48rem;
+          }
+          .bento-grid {
+            grid-auto-rows: 34rem !important;
+            gap: 3.5rem !important;
+          }
+        }
       `}</style>
 
       {/* ══ LEVEL 1: SERIES EXPLORER ══ */}
@@ -600,7 +826,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
 
         {/* Option A: Collections Landing Directory (when no collection is selected) */}
         {!selectedCollection ? (
-          <div style={{ padding: '6rem 4rem 4rem 4rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <div className="collections-directory-container">
             
             {/* Page Header */}
             <div style={{ marginBottom: '5rem', width: '100%', textAlign: 'center' }}>
@@ -719,7 +945,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         ) : (
           /* Option C: Collection Typographic Index (when a collection is selected) */
           <div
-            style={{ padding: '6rem 4rem 6rem 4rem', display: 'flex', flexDirection: 'column', flex: 1, position: 'relative' }}
+            className="typographic-index-container"
           >
             {/* Back Button */}
             <button
@@ -933,12 +1159,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
       <div className="detail-view-inner-wrap" style={{ display: selectedSeries ? 'flex' : 'none', flexDirection: 'column' }}>
 
         {/* Detail View Minimal Nav */}
-        <div style={{
-          position: 'sticky', top: '64px', zIndex: 100,
-          padding: '1.5rem 4rem', background: 'var(--sticky-nav-bg)',
-          backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
+        <div className="detail-nav">
           <button
             onClick={() => {
               setSelectedSeries(null)
@@ -954,7 +1175,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
           >
             ← Back to All Series
           </button>
-          <div style={{
+          <div className="detail-nav-active-label" style={{
             fontFamily: 'var(--font-mono)', fontSize: '.7rem',
             letterSpacing: '.2em', color: 'var(--muted)', textTransform: 'uppercase'
           }}>
@@ -963,11 +1184,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         </div>
 
         {/* Full bleed Series Hero */}
-        <div className="detail-hero-section" style={{
-          height: '75vh', position: 'relative', overflow: 'hidden',
-          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-          padding: '0 4rem 6rem', background: 'var(--dark)'
-        }}>
+        <div className="detail-hero-section">
           {/* Cover image wrap for CodePen style sliding reveal */}
           <div className="detail-hero-bg-wrap" style={{
             position: 'absolute', inset: 0, overflow: 'hidden',
@@ -1013,12 +1230,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         {renderDetailContent && (
           <div style={{ display: 'contents' }}>
             {/* Split row description & Metadata panel */}
-            <div style={{
-              padding: '6rem 4rem', display: 'flex', flexWrap: 'wrap',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between', gap: '4rem',
-              borderBottom: '1px solid var(--border)'
-            }}>
+            <div className="detail-metadata-section">
           {/* Description */}
           <div className="detail-description-panel" style={{ flex: '1 1 36rem', maxWidth: '45rem' }}>
             <div style={{
@@ -1069,7 +1281,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         </div>
 
         {/* EDITORIAL PHOTOS GRID */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', padding: '8rem 4rem' }}>
+        <div className="detail-photos-grid-section">
           {editorialBlocks.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '6rem 0', fontFamily: 'var(--font-mono)',
@@ -1102,11 +1314,6 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
                           key={photo._key || photo._id || pIdx}
                           className="masonry-item-inner"
                           onClick={() => openLightbox(photo, activePhotos)}
-                          style={{
-                            flex: '1 1 20rem', position: 'relative', overflow: 'hidden',
-                            height: '35rem', cursor: 'none', background: 'var(--dark)',
-                            borderRadius: '2px', visibility: 'hidden'
-                          }}
                         >
                           <img
                             src={urlFor(photo.image).width(900).quality(85).url()}
@@ -1166,13 +1373,8 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
                   >
                     {/* Large Center Image */}
                     <div
-                      className="ed-image-wrap"
+                      className="ed-image-wrap-full ed-image-wrap"
                       onClick={() => openLightbox(photo, activePhotos)}
-                      style={{
-                        width: '100%', height: '65vh',
-                        position: 'relative', overflow: 'hidden', cursor: 'none',
-                        background: 'var(--dark)', borderRadius: '2px', visibility: 'hidden'
-                      }}
                     >
                       <img
                         src={photoUrl}
@@ -1247,11 +1449,6 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
                   <div
                     className="ed-image-wrap"
                     onClick={() => openLightbox(photo, activePhotos)}
-                    style={{
-                      flex: '1 1 30rem', position: 'relative', overflow: 'hidden',
-                      height: '42rem', cursor: 'none', background: 'var(--dark)',
-                      borderRadius: '2px', visibility: 'hidden'
-                    }}
                   >
                     <img
                       src={photoUrl}
@@ -1308,11 +1505,7 @@ export default function GalleryPage({ seriesList, initialSeriesId, onClearInitia
         </div>
 
         {/* Series detail Footer */}
-        <div style={{
-          padding: '2.5rem 4rem', borderTop: '1px solid var(--border)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          flexWrap: 'wrap', gap: '1.5rem'
-        }}>
+        <div className="detail-footer">
           <button
             onClick={() => {
               setSelectedSeries(null)
